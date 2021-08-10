@@ -1,5 +1,21 @@
 from tkinter import *
+import mysql.connector
 
+#configure connection to mysql database:
+mydb = mysql.connector.connect(
+    host='localhost',
+    user='root',
+    password='tobias02',
+    port='3306',
+    database='simple srs'
+)
+
+mycursor = mydb.cursor()
+
+mycursor.execute('SELECT SetID, SetName FROM sets')#run select query on database
+sets = mycursor.fetchall()#assigns output of select query to set_data variable
+for set in sets:
+    print(set)
 
 gui = Tk()#creates gui window
 gui.title("SimpleSRS")#gives the window a title
