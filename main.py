@@ -1,13 +1,17 @@
 from tkinter import *
 import mysql.connector
+from datetime import datetime
 
+# datetime object containing current date and time
+now = datetime.now()
+print(now)
 #configure connection to mysql database:
 mydb = mysql.connector.connect(
     host='localhost',
     user='root',
     password='password',
     port='3306',
-    database='simple srs'
+    database='simplesrs'
 )
 
 mycursor = mydb.cursor()
