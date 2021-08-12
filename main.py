@@ -22,7 +22,7 @@ gui = Tk()  # creates gui window
 gui.title("SimpleSRS")  # gives the window a title
 gui.geometry("1280x720")  # resizes window to 1280x720p
 
-def fetch_sets():  # set selection menu
+def set_select():  # set selection menu
     # remove opening menu labels/buttons:
     logo_label.grid_forget()
     browse_button.grid_forget()
@@ -38,6 +38,11 @@ def fetch_sets():  # set selection menu
 
 def set_options(chosen_set):  # management menu for chosen set, from here, lessons, reviews and edits to the set can be completed
     print(chosen_set)
+    gui.destroy()  # closes window
+    set_window = Tk()
+    set_window.title(chosen_set)  # titles the window to the title of the user's chosen set
+    set_window.geometry("1280x720")  # resizes window to 1280x720p
+
 
 
 
@@ -48,7 +53,7 @@ logo_label.grid(column=0, row=0, padx="352", pady="50")
 
 browse_text = StringVar()  # "browse sets" button
 browse_text.set("Browse Sets")
-browse_button = Button(gui, textvariable=browse_text, command=fetch_sets, font="Corbel", bg="#ffffff", height=3,
+browse_button = Button(gui, textvariable=browse_text, command=set_select, font="Corbel", bg="#ffffff", height=3,
                        width=30)
 browse_button.grid(column=0, row=1, padx="320")
 
