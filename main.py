@@ -42,7 +42,8 @@ def set_options(chosen_set):  # management menu for chosen set, from here, lesso
     set_window = Tk()
     set_window.title(chosen_set)  # titles the window to the title of the user's chosen set
     set_window.geometry("1280x720")  # resizes window to 1280x720p
-
+    set_options_header = Label(set_window, text="test")
+    set_options_header.grid(column=0, row=0, padx=150)
 
 
 
