@@ -29,11 +29,16 @@ def fetch_sets():  # set selection menu
     set_select_header = Label(gui, text="Select a set below:", font=("Corbel", 30))
     set_select_header.grid(column=0, row=0, padx=150)
     row_n = 1  # variable which will increment each set button's vertical position in window
-    print(sets)
     for item in sets:  # loop to display all sets output from extract statement above as buttons
-        button = Button(gui, text=(str(item)[2:-3]), command=lambda x=item: func(x), font=("Corbel",17), height=1, width=15)
+        item = str(item)[2:-3]  #converts item from tuple to string and remove leading and trailing punctuation
+        item.replace(" ", "")
+        button = Button(gui, text=item, command=lambda x=item: func(x), font=("Corbel",17), height=1, width=15)
         button.grid(column=0, row=row_n, padx=320, pady=5)
         row_n += 1
+
+def func(x):
+    print("test")
+
 
 # OPENING MENU:
 logo = PhotoImage(file="logo.png")  # logo
