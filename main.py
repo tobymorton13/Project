@@ -32,12 +32,13 @@ def fetch_sets():  # set selection menu
     for item in sets:  # loop to display all sets output from extract statement above as buttons
         item = str(item)[2:-3]  #converts item from tuple to string and removes leading and trailing punctuation
         item.replace(" ", "")
-        button = Button(gui, text=item, command=lambda x=item: func(x), font=("Corbel", 17), height=1, width=15)
+        button = Button(gui, text=item, command=lambda chosen_set=item: set_options(chosen_set), font=("Corbel", 17), height=1, width=15)
         button.grid(column=0, row=row_n, padx=320, pady=5)
         row_n += 1
 
-def func(x):
-    print(x)
+def set_options(chosen_set):  # management menu for chosen set, from here, lessons, reviews and edits to the set can be completed
+    print(chosen_set)
+
 
 
 # OPENING MENU:
