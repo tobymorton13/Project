@@ -1,6 +1,7 @@
 from tkinter import *
 import mysql.connector
 from datetime import datetime
+import functools
 
 now = datetime.now()  # variable containing current date and time
 
@@ -25,19 +26,18 @@ def fetch_sets():  # set selection menu
     # remove opening menu labels/buttons:
     logo_label.grid_forget()
     browse_button.grid_forget()
-    # create header text label:
-    set_select_header = Label(gui, text="Select a set below:", font=("Corbel", 30))
+    set_select_header = Label(gui, text="Select a set below:", font=("Corbel", 30))  # creates header text label
     set_select_header.grid(column=0, row=0, padx=150)
     row_n = 1  # variable which will increment each set button's vertical position in window
     for item in sets:  # loop to display all sets output from extract statement above as buttons
-        item = str(item)[2:-3]  #converts item from tuple to string and remove leading and trailing punctuation
+        item = str(item)[2:-3]  #converts item from tuple to string and removes leading and trailing punctuation
         item.replace(" ", "")
-        button = Button(gui, text=item, command=lambda x=item: func(x), font=("Corbel",17), height=1, width=15)
+        button = Button(gui, text=item, command=lambda x=item: func(x), font=("Corbel", 17), height=1, width=15)
         button.grid(column=0, row=row_n, padx=320, pady=5)
         row_n += 1
 
 def func(x):
-    print("test")
+    print(x)
 
 
 # OPENING MENU:
