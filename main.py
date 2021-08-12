@@ -15,8 +15,7 @@ mycursor = mydb.cursor()
 
 mycursor.execute('SELECT SetName FROM sets')  # run select query on database
 sets = mycursor.fetchall()  # assigns output of select query to set_data variable
-for sets in sets:
-    print(sets)
+
 
 gui = Tk()  # creates gui window
 gui.title("SimpleSRS")  # gives the window a title
@@ -28,24 +27,20 @@ def fetch_sets():  # set selection menu
     browse_button.grid_forget()
     # create header text label:
     set_select_header = Label(gui, text="Select a set below:", font=("Corbel", 30))
-    set_select_header.grid(column=0, row=0, padx=200)
+    set_select_header.grid(column=0, row=0, padx=150)
     row_n = 1  # variable which will increment each set button's vertical position in window
+    print(sets)
     for item in sets:  # loop to display all sets output from extract statement above as buttons
-        button = Button(gui, text=item, command=lambda x=item: func(x))
-        button.grid(column=0, row=row_n)
+        button = Button(gui, text=(str(item)[2:-3]), command=lambda x=item: func(x), font=("Corbel",17), height=1, width=15)
+        button.grid(column=0, row=row_n, padx=320, pady=5)
         row_n += 1
 
-
-
-
 # OPENING MENU:
-# logo:
-logo = PhotoImage(file="logo.png")
+logo = PhotoImage(file="logo.png")  # logo
 logo_label = Label(image=logo)
 logo_label.grid(column=0, row=0, padx="352", pady="50")
 
-# "browse sets" button:
-browse_text = StringVar()
+browse_text = StringVar()  # "browse sets" button
 browse_text.set("Browse Sets")
 browse_button = Button(gui, textvariable=browse_text, command=fetch_sets, font="Corbel", bg="#ffffff", height=3,
                        width=30)
