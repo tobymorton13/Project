@@ -1,6 +1,7 @@
 from tkinter import *
 import mysql.connector
-from datetime import datetime
+from datetime import datetime, timedelta
+import time
 
 now = datetime.now()  # variable containing current date and time
 
@@ -42,48 +43,68 @@ def fetch_sets():  # set selection menu
         button.grid(column=0, row=row_n, padx="520", pady="5")
         row_n += 1
 
-def remove_punctuation(i):  #function to remove unwanted punctuation from a string
+
+def remove_punctuation(i):  # function to remove unwanted punctuation from a string
     i = str(i)
     disallowed_characters = "(),"  # creation of a set of unwanted punctuation
     for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
         i = i.replace(character, "")
 
+
 def set_options(chosen_set):  # chosen set option menu, from here, lessons, reviews and edits to set can be completed
     clear_window()
-    global global_chosen_set  #creation of a global chosen_set variable to allow it to be used in the set management screen
+    global global_chosen_set  # creation of a global chosen_set variable to allow it to be used in the set management screen
     global_chosen_set = chosen_set
-    set_options_header = Label(gui, text=chosen_set, font=("Corbel", 30))  # creates a header label, the title of the chosen set
+    set_options_header = Label(gui, text=chosen_set,
+                               font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_options_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
     set_manage_button = Button(gui, text="Manage Set", command=set_management, font=("Corbel", 17), height=1,
                                width=15)  # creates a "manage set" button
     set_manage_button.grid(column=0, row=1, padx="520", pady="5")  # places the manage set button on the canvas
-    #!!!!!CREATE QUERY TO EXTRACT SET ID FOR "CHOSEN SET", USE JOIN STATEMENTS TO EXTRACT ITEMID's and SRSPos and Last Review
-    mycursor.execute('SELECT SetID, SetName FROM sets')  #sql statement to select all setid's and setnames
-    set_list = mycursor.fetchall()  #assign output of sql statement to set_list variable
-    tuple_in_list = [set_list for set_list in set_list if chosen_set in set_list]  #outputs tuple within list that contains chosen_set
-    chosen_setid = (str(tuple_in_list))[2]  #selects character of output tuple that correponds to chosen set's setid
-    mycursor.execute('SELECT items.ItemID FROM Items INNER JOIN sets ON Items.SetID = sets.SetID WHERE sets.SetID = (%s)' % (chosen_setid))
+    # !!!!!CREATE QUERY TO EXTRACT SET ID FOR "CHOSEN SET", USE JOIN STATEMENTS TO EXTRACT ITEMID's and SRSPos and Last Review
+    mycursor.execute('SELECT SetID, SetName FROM sets')  # sql statement to select all setid's and setnames
+    set_list = mycursor.fetchall()  # assign output of sql statement to set_list variable
+    tuple_in_list = [set_list for set_list in set_list if
+                     chosen_set in set_list]  # outputs tuple within list that contains chosen_set
+    chosen_setid = (str(tuple_in_list))[2]  # selects character of output tuple that correponds to chosen set's setid
+    mycursor.execute(
+        'SELECT items.ItemID FROM Items INNER JOIN sets ON Items.SetID = sets.SetID WHERE sets.SetID = (%s)' % (
+            chosen_setid))
     itemid_list = mycursor.fetchall()
     items_to_learn = []
-    for i in itemid_list:  #loop to verify which items are due for a lesson
-        i = str(i)  #convert each itemid from tuple to string
-        disallowed_characters = "(),"  #creation of a set of unwanted punctuation
-        for character in disallowed_characters: #removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
+    for i in itemid_list:  # loop to verify which items are due for a lesson or review
+        i = str(i)  # convert each itemid from tuple to string
+        disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
+        for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
             i = i.replace(character, "")
-        mycursor.execute('SELECT SRSPos FROM items WHERE ItemID = (%s)' % (i))  #sql statement to extract item's position in the srs system
-        i_srspos = mycursor.fetchall()
+        mycursor.execute('SELECT SRSPos FROM items WHERE ItemID = (%s)' % (
+            i))  # sql statement to extract item i's position in the srs system
+        i_srspos = mycursor.fetchall()  # assigns the srs pos of item i to a variable
+        mycursor.execute('SELECT LastReview FROM items WHERE ItemID = (%s)' % (
+            i))  # sql statement to extract datetime of item i's last review
+        i_lastreview = mycursor.fetchall()  # assigns the datetime of item i's last review to a variable
+        for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
+            i_lastreview = i_lastreview.replace(character, "")
         i_srspos = str(i_srspos)
         if i_srspos == "[(0,)]":
             items_to_learn += i
-            print(items_to_learn)
+        if i_srspos == "[(1,)]":
+            i_lastreview = str(i_lastreview)
+            print(datetime.now())
+
+        else:
+            print()
 
 
 
 
+    available_lessons = len(items_to_learn)
 
-def set_management():  #menu to make changes to selected sest
+
+def set_management():  # menu to make changes to selected sest
     clear_window()
-    set_management_header = Label(gui, text=global_chosen_set,font=("Corbel", 30))  # creates a header label, the title of the chosen set
+    set_management_header = Label(gui, text=global_chosen_set,
+                                  font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_management_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
     prompt_lb = Listbox(gui)
     prompt_lb.grid(column=0, row=1, padx="320", pady="5")
@@ -96,7 +117,7 @@ logo_label.grid(column=0, row=0, padx="352", pady="50")
 
 browse_text = StringVar()  # "browse sets" button
 browse_text.set("Browse Sets")
-browse_button = Button(gui, textvariable=browse_text, command=fetch_sets, font="Corbel", bg="#ffffff", height=3,
+browse_button = Button(gui, textvariable=browse_text, command=fetch_sets, font="Corbel", height=3,
                        width=30)
 browse_button.grid(column=0, row=1, padx="320")
 
