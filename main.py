@@ -45,6 +45,8 @@ def fetch_sets():  # set selection menu
 
 def set_options(chosen_set):  # management menu for chosen set, from here, lessons, reviews and edits to set can be completed
     clear_window()
+    global global_chosen_set  #creation of a global chosen_set variable to allow it to be used in the set management screen
+    global_chosen_set = chosen_set
     set_options_header = Label(gui, text=chosen_set, font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_options_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
     set_manage_button = Button(gui, text="Manage Set", command=set_management, font=("Corbel", 17), height=1,
@@ -55,15 +57,19 @@ def set_options(chosen_set):  # management menu for chosen set, from here, lesso
     set_list = mycursor.fetchall()  #assign output of sql statement to set_list variable
     tuple_in_list = [set_list for set_list in set_list if chosen_set in set_list]  #outputs tuple within list that contains chosen_set
     chosen_setid = (str(tuple_in_list))[2]  #selects character of output tuple that correponds to chosen set's setid
-    mycursor.execute('SELECT items.ItemID FROM Items INNER JOIN sets ON Items.SetID = sets.SetID WHERE sets.SetID = (%s)' % (chosen_set))
-    print(mycursor._last_executed)
+    mycursor.execute('SELECT items.ItemID FROM Items INNER JOIN sets ON Items.SetID = sets.SetID WHERE sets.SetID = (%s)' % (chosen_setid))
+    itemid_list = mycursor.fetchall()
+    print(itemid_list)
+    itemid_list=str(itemid_list)  #convert the list of itemid's to a string to allow it to be operated on
+    itemid_list.strip("(").strip(")").strip("")
 
 
 def set_management():
-    print("set management screen")
     clear_window()
-    set_management_header = Label(gui, text=chosen_set,font=("Corbel", 30))  # creates a header label, the title of the chosen set
-
+    set_management_header = Label(gui, text=global_chosen_set,font=("Corbel", 30))  # creates a header label, the title of the chosen set
+    set_management_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
+    prompt_lb = Listbox(gui)
+    prompt_lb.grid(column=0, row=1, padx="320", pady="5")
 
 
 # OPENING MENU:
