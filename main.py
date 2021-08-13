@@ -83,15 +83,16 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
         mycursor.execute('SELECT LastReview FROM items WHERE ItemID = (%s)' % (
             i))  # sql statement to extract datetime of item i's last review
         i_lastreview = mycursor.fetchall()  # assigns the datetime of item i's last review to a variable
-        for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
-            i_lastreview = i_lastreview.replace(character, "")
+        now = str(datetime.now())  #store current date time in a variable
+        print(i_lastreview)
+        duration = now - i_lastreview
+        print(duration)
         i_srspos = str(i_srspos)
         if i_srspos == "[(0,)]":
             items_to_learn += i
         if i_srspos == "[(1,)]":
-            i_lastreview = str(i_lastreview)
             print(datetime.now())
-
+            #need to add if i_lastreview - datetime.now() > 4 hours, add to review stack.
         else:
             print()
 
