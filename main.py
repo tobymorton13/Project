@@ -42,8 +42,13 @@ def fetch_sets():  # set selection menu
         button.grid(column=0, row=row_n, padx="520", pady="5")
         row_n += 1
 
+def remove_punctuation(i):  #function to remove unwanted punctuation from a string
+    i = str(i)
+    disallowed_characters = "(),"  # creation of a set of unwanted punctuation
+    for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
+        i = i.replace(character, "")
 
-def set_options(chosen_set):  # management menu for chosen set, from here, lessons, reviews and edits to set can be completed
+def set_options(chosen_set):  # chosen set option menu, from here, lessons, reviews and edits to set can be completed
     clear_window()
     global global_chosen_set  #creation of a global chosen_set variable to allow it to be used in the set management screen
     global_chosen_set = chosen_set
@@ -59,12 +64,24 @@ def set_options(chosen_set):  # management menu for chosen set, from here, lesso
     chosen_setid = (str(tuple_in_list))[2]  #selects character of output tuple that correponds to chosen set's setid
     mycursor.execute('SELECT items.ItemID FROM Items INNER JOIN sets ON Items.SetID = sets.SetID WHERE sets.SetID = (%s)' % (chosen_setid))
     itemid_list = mycursor.fetchall()
-    print(itemid_list)
-    itemid_list=str(itemid_list)  #convert the list of itemid's to a string to allow it to be operated on
-    itemid_list.strip("(").strip(")").strip("")
+    items_to_learn = []
+    for i in itemid_list:  #loop to verify which items are due for a lesson
+        i = str(i)  #convert each itemid from tuple to string
+        disallowed_characters = "(),"  #creation of a set of unwanted punctuation
+        for character in disallowed_characters: #removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
+            i = i.replace(character, "")
+        mycursor.execute('SELECT SRSPos FROM items WHERE ItemID = (%s)' % (i))  #sql statement to extract item's position in the srs system
+        i_srspos = mycursor.fetchall()
+        i_srspos = str(i_srspos)
+        if i_srspos == "[(0,)]":
+            items_to_learn += i
+            print(items_to_learn)
 
 
-def set_management():
+
+
+
+def set_management():  #menu to make changes to selected sest
     clear_window()
     set_management_header = Label(gui, text=global_chosen_set,font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_management_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
