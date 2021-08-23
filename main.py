@@ -104,15 +104,15 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     available_lessons = len(items_to_learn)
 
 
-def set_management():  # menu to make changes to selected sest
+def set_management():  # menu to make changes to selected set
     clear_window()
-    description_text = "Select the prompt for the item you'd like to make changes to:"
+    description_text = "Select the item you'd like to make changes to:"
     set_management_header = Label(gui, text=global_chosen_set,
                                   font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_management_header.grid(column=0, row=0, padx="475", pady="10")  # places the header label on the canvas
     set_management_description = Label(gui, text=description_text, font=("Corbel", 15))
     set_management_description.grid(column=0, row=1, padx="20", pady="10")
-    items_lb = Listbox(gui, width="50", height="35",)  #creates a listbox widget to display all items and their prompts and responses
+    items_lb = Listbox(gui, width="50", height="30", selectmode=BROWSE)  #creates a listbox widget to display all items and their prompts and responses
     items_lb.grid(column=0, row=2, padx="320", pady="5")  #places prompt listbox
     mycursor.execute('SELECT ItemID from items WHERE SetID = (%s)' % (global_chosen_setid))  #sql statement to select all itemids from chosen set
     itemids = mycursor.fetchall()  #assigns output of sql statement to itemids variable
@@ -123,19 +123,41 @@ def set_management():  # menu to make changes to selected sest
         prompts.append(mycursor.fetchall())
 
     for itemid in itemids:  #a loop for each itemid, appends the corresponding responseout to a list to be used in the listbox
-        mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (itemid))
+        mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (itemid))  #sql statement to
         responses.append(mycursor.fetchall())
-    print(responses)
+
+    items_list = []  #creates an empty list for prompts and reponses to be inserted to as pairs
+    for i in range(len(prompts)):
+        prompt_str = str(prompts[i])
+        response_str = str(responses[i])
+        disallowed_characters = """(),[]\'"""
+        for character in disallowed_characters:  # removes all unwanted punctuation from prompt string
+            prompt_str = prompt_str.replace(character, "")
+        for character in disallowed_characters:  # removes all unwanted punctuation from response string
+            response_str = response_str.replace(character, "")
+        items_list.append([prompt_str, response_str])
+        i+=1
 
     n=0  #variable to determine position within listbox to insert prompt to, increments with each iteration
-    for prompt in prompts:
-        disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
-        prompt = str(prompt)
-        for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
-            prompt = prompt.replace(character, "")
-        items_lb.insert(n, prompt)
+    for item in items_list:
+        disallowed_characters = "{}[]"
+        item=str(item)
+        for character in disallowed_characters:  # removes all unwanted punctuation from prompt string
+            item = item.replace(character, "")
+        items_lb.insert(n, item)  #inserts item to the listbox widget
         n+=1
+    def confirm_selection(items_lb):
+        selection = items_lb.curselection()
+        if selection:
+            index = selection[0]
+            val = items_lb.get( index  )
+            item_manage(val)
+    confirm_button = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb))
+    confirm_button.grid(column=0, row=4, pady="10")
 
+def item_manage(val):  #function for management of a specific item
+    clear_window()
+    print(val)
 
 # OPENING MENU:
 logo = PhotoImage(file="logo.png")  # logo
