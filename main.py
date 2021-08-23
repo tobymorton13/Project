@@ -212,11 +212,9 @@ def create_new_item():  #function to insert new item and its prompt and response
     new_response = new_response_entry.get()  #assigns the new response input by the user to a variable
     max=max_item_id()  #call this function so the new item's itemid can be an increment of the previous max value
     now = datetime.now()
-    data = (max, now)
-    print(now)
-    print(type(now))
-    #items_insert = 'INSERT INTO items (ItemID, LastReview) VALUES (%s), (%s)'
-    #mycursor.execute(items_insert, data)
+    formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')  #reformats the current time to allow it to be inserted to database
+    mycursor.execute('INSERT INTO items (ItemID, LastReview) VALUES (%s, %s)' (max, formatted_date))
+    mydb.commit()
 
 def max_item_id():  #function to find the highest item id value
     mycursor.execute('SELECT ItemID FROM items')
