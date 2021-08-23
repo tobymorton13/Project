@@ -151,8 +151,10 @@ def set_management():  # menu to make changes to selected set
             index = selection[0]  #stores the index of the selected item as a variable, also equal to the item's itemid
             val = items_lb.get(index)
             item_manage(val)
-    confirm_button = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb))  #button to confirm selection of an item, triggers confirm_selection function
-    confirm_button.grid(column=0, row=4, pady="10")
+    confirm_btn = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb), background="springgreen2")  #button to confirm selection of an item, triggers confirm_selection function
+    confirm_btn.grid(column=0, row=4, pady="10")
+    new_item_btn = Button(gui, text="New Item...", command= lambda: new_item(), background="sky blue", width=20)
+    new_item_btn.grid(column=0, row=5, pady="10")
 
 
 def item_manage(val):  #function for management of a specific item
@@ -187,32 +189,59 @@ def item_manage(val):  #function for management of a specific item
     response_entry_btn = Button(gui, text="Confirm changes", command=lambda: response_confirm(), height=1, width=13, font=("Corbel", 8))  #creates a confirmation button for the entry of a new response
     response_entry_btn.grid(column=0, row=6)
 
-    item_delete_btn = Button(gui, text="Delete Item", command=lambda: item_delete_func(), height=2, width=20, font=("Corbel", 15), background = "red", foreground = "white")
+    item_delete_btn = Button(gui, text="Delete Item", command=lambda: item_delete_func(), height=1, width=15, font=("Corbel", 15), background = "firebrick3", foreground = "white")  #creates an item delete button
     item_delete_btn.grid(column=0, row=7, pady=20)
 
+def new_item():
+    clear_window()
+    new_prompt_header = Label(gui, text="Enter a new prompt:", font=("Corbel", 20))  #creates a label prompting user to input their new item's prompt
+    new_prompt_header.grid(column=0, row=0, pady=10, padx = 500)
+    global new_prompt_entry
+    new_prompt_entry = Entry(gui)  #creates a text entry box
+    new_prompt_entry.grid(column=0, row=1)
+    new_response_header = Label(gui, text="Enter a new response:", font=("Corbel", 20))
+    new_response_header.grid(column=0, row=3, pady=10)
+    global new_response_entry
+    new_response_entry = Entry(gui)
+    new_response_entry.grid(column=0, row=4)
+    new_item_confirm_btn = Button(gui, text="Confirm prompt and response", command=lambda: create_new_item(), height=1, width=25, background = "springgreen2", font=("Corbel", 18))  #creates a confirmation button which calles the create_new_item function when pressed
+    new_item_confirm_btn.grid(column=0, row=5, pady=30)
 
+def create_new_item():  #function to insert new item and its prompt and response to database
+    new_prompt = new_prompt_entry.get()  #assigns the new prompt input by the user to a variable
+    new_response = new_response_entry.get()  #assigns the new response input by the user to a variable
+    max=max_item_id()  #call this function so the new item's itemid can be an increment of the previous max value
+    now = datetime.now()
+    data = (max, now)
+    print(now)
+    print(type(now))
+    #items_insert = 'INSERT INTO items (ItemID, LastReview) VALUES (%s), (%s)'
+    #mycursor.execute(items_insert, data)
+
+def max_item_id():  #function to find the highest item id value
+    mycursor.execute('SELECT ItemID FROM items')
+    itemid_list = mycursor.fetchall()
+    x = max(itemid_list)
+    return(x)
 
 def prompt_confirm():  #function to update the prompts table with the new updates entered by the user
     new_prompt = prompt_entry.get()  # assigns the user's new prompt input to a variable
     prompt_statement = 'UPDATE prompts SET PromptOut = (%s) WHERE ItemID = (%s)'
-    data = (new_prompt, chosen_itemid)  #NOT WORKING!!! 3 SHOULD BE THE ITEM'S ITEMID
+    data = (new_prompt, chosen_itemid)
     mycursor.execute(prompt_statement, data)
     mydb.commit()
 
 def response_confirm():  #function to update the response table with the new updates entered by the user
-    new_response = response_entry.get()  # assigns the user's new responses input to a variable
+    new_response = response_entry.get()
     response_statement = 'UPDATE responses SET ResponseOut = (%s) WHERE ItemID = (%s)'
-    data = (new_response, chosen_itemid)  # NOT WORKING!!! 3 SHOULD BE THE ITEM'S ITEMID
+    data = (new_response, chosen_itemid)  #
     mycursor.execute(response_statement, data)
     mydb.commit()
 
 def item_delete_func():  #function used to delete an item when the delete button is selected by the user
-    delete_statement_prompts = 'DELETE FROM prompts WHERE ItemID = (%s)'  #deletes all rows in prompts table corresponding to chosen itemid
-    mycursor.execute(delete_statement_prompts, chosen_itemid)
-    delete_statement_responses = 'DELETE FROM responses WHERE ItemID = (%s)'  #deletes all rows in responses table corresponding to chosen itemid
-    mycursor.execute(delete_statement_responses, chosen_itemid)
-    delete_statement_items = 'DELETE FROM items WHERE ItemID = (%s)'  #deletes all rows in items table corresponding to chosen itemid
-    mycursor.execute(delete_statement_items, chosen_itemid)
+    mycursor.execute('DELETE FROM prompts WHERE ItemID = (%s)' % (chosen_itemid))  #deletes all rows in prompts table corresponding to chosen itemid
+    mycursor.execute('DELETE FROM responses WHERE ItemID = (%s)' % (chosen_itemid))  #deletes all rows in responses table corresponding to chosen itemid
+    mycursor.execute('DELETE FROM items WHERE ItemID = (%s)' % (chosen_itemid))  #deletes all rows in items table corresponding to chosen itemid
     mydb.commit()
 
 # OPENING MENU:
