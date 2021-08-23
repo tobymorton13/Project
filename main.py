@@ -67,6 +67,8 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     tuple_in_list = [set_list for set_list in set_list if
                      chosen_set in set_list]  # outputs tuple within list that contains chosen_set
     chosen_setid = (str(tuple_in_list))[2]  # selects character of output tuple that correponds to chosen set's setid
+    global global_chosen_setid  #  creation of a global chosen_setid variable to allow it to be used in the set management screen
+    global_chosen_setid = chosen_setid
     mycursor.execute(
         'SELECT items.ItemID FROM Items INNER JOIN sets ON Items.SetID = sets.SetID WHERE sets.SetID = (%s)' % (
             chosen_setid))
@@ -85,16 +87,16 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
         i_lastreview = mycursor.fetchall()  # assigns the datetime of item i's last review to a variable
         now = str(datetime.now())  #store current date time in a variable
         print(i_lastreview)
-        duration = now - i_lastreview
-        print(duration)
+        duration = "x"
         i_srspos = str(i_srspos)
         if i_srspos == "[(0,)]":
             items_to_learn += i
-        if i_srspos == "[(1,)]":
+        elif i_srspos == "[(1,)]":
             print(datetime.now())
             #need to add if i_lastreview - datetime.now() > 4 hours, add to review stack.
         else:
             print()
+    print(items_to_learn)
 
 
 
@@ -104,11 +106,36 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
 
 def set_management():  # menu to make changes to selected sest
     clear_window()
+    description_text = "Select the prompt for the item you'd like to make changes to:"
     set_management_header = Label(gui, text=global_chosen_set,
                                   font=("Corbel", 30))  # creates a header label, the title of the chosen set
-    set_management_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
-    prompt_lb = Listbox(gui)
-    prompt_lb.grid(column=0, row=1, padx="320", pady="5")
+    set_management_header.grid(column=0, row=0, padx="475", pady="10")  # places the header label on the canvas
+    set_management_description = Label(gui, text=description_text, font=("Corbel", 15))
+    set_management_description.grid(column=0, row=1, padx="20", pady="10")
+    items_lb = Listbox(gui, width="50", height="35",)  #creates a listbox widget to display all items and their prompts and responses
+    items_lb.grid(column=0, row=2, padx="320", pady="5")  #places prompt listbox
+    mycursor.execute('SELECT ItemID from items WHERE SetID = (%s)' % (global_chosen_setid))  #sql statement to select all itemids from chosen set
+    itemids = mycursor.fetchall()  #assigns output of sql statement to itemids variable
+    prompts = []
+    responses = []
+    for itemid in itemids:  #a loop for each itemid, appends the corresponding promptout to a list to be used in the listbox
+        mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (itemid))
+        prompts.append(mycursor.fetchall())
+
+    for itemid in itemids:  #a loop for each itemid, appends the corresponding responseout to a list to be used in the listbox
+        mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (itemid))
+        responses.append(mycursor.fetchall())
+    print(responses)
+
+    n=0  #variable to determine position within listbox to insert prompt to, increments with each iteration
+    for x in prompts:
+        disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
+        prompt = str(prompt)
+        for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
+            prompt = prompt.replace(character, "")
+            response = response.replace(character, "")
+        items_lb.insert(n, prompt)
+        n+=1
 
 
 # OPENING MENU:
