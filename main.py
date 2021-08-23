@@ -158,24 +158,34 @@ def set_management():  # menu to make changes to selected set
 
 def item_manage(index, val):  #function for management of a specific item
     clear_window()
-    print(index)
-    print(val)
     item_label = Label(gui, text=val, font=("Corbel", 25))  #creates a header of the selected item
     item_label.grid(column=0, row =0, padx="400")
+
     prompt_label = Label(gui, text="Enter a new prompt:", font=("Corbel", 15))  #creates a label prompting the user to enter a new prompt in the text box
     prompt_label.grid(column=0, row=1, pady=0)
+    global prompt_entry
     prompt_entry = Entry(gui)  #creates a text entry box
     prompt_entry.grid(column=0, row=2, pady=10)
-    new_prompt = prompt_entry.get()  #assigns the user's input to a variable
+    prompt_entry_btn = Button(gui, text="Confirm changes", command=lambda: prompt_confirm(), height=1, width=13, font=("Corbel", 8))  #creates a confirmation button for the entry of a new prompt
+    prompt_entry_btn.grid(column=0, row=3)
+
     response_label = Label(gui, text="Enter a new response:", font=("Corbel", 15))  #creates a label prompting the user to enter a new response in the text box
     response_label.grid(column=0, row=4, pady=0)
+    global response_entry
     response_entry = Entry(gui)  #creates a text entry box
     response_entry.grid(column=0, row=5, pady=10)
-    new_response = response_entry.get()  #assigns the user's input to a variable
-    print(new_prompt)
-    print(new_response)
+    response_entry_btn = Button(gui, text="Confirm changes", command=lambda: response_confirm(), height=1, width=13, font=("Corbel", 8))  #creates a confirmation button for the entry of a new response
+    response_entry_btn.grid(column=0, row=6)
 
 
+def prompt_confirm():
+    new_prompt = prompt_entry.get()  # assigns the user's new prompt input to a variable
+    prompt_statement = 'UPDATE prompts SET PromptOut= (%s) WHERE ItemID = (%s)'
+    data = (new_prompt, 3)
+    mycursor.execute(prompt_statement, data)
+
+def response_confirm():
+    new_response = response_entry.get()  # assigns the user's new responses input to a variable
 
 
 # OPENING MENU:
