@@ -86,17 +86,16 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
             i))  # sql statement to extract datetime of item i's last review
         i_lastreview = mycursor.fetchall()  # assigns the datetime of item i's last review to a variable
         now = str(datetime.now())  #store current date time in a variable
-        print(i_lastreview)
+        print()
         duration = "x"
         i_srspos = str(i_srspos)
         if i_srspos == "[(0,)]":
             items_to_learn += i
         elif i_srspos == "[(1,)]":
-            print(datetime.now())
+            print()
             #need to add if i_lastreview - datetime.now() > 4 hours, add to review stack.
         else:
             print()
-    print(items_to_learn)
 
 
 
@@ -151,18 +150,30 @@ def set_management():  # menu to make changes to selected set
         if selection:  #once a selection has been made, if statement is triggered.
             index = selection[0]  #stores the index of the selected item as a variable, also equal to the item's itemid
             val = items_lb.get(index)
-            item_manage(index, val)
+            item_manage(val)
     confirm_button = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb))  #button to confirm selection of an item, triggers confirm_selection function
     confirm_button.grid(column=0, row=4, pady="10")
 
 
-def item_manage(index, val):  #function for management of a specific item
+def item_manage(val):  #function for management of a specific item
     clear_window()
     item_label = Label(gui, text=val, font=("Corbel", 25))  #creates a header of the selected item
     item_label.grid(column=0, row =0, padx="400")
 
     prompt_label = Label(gui, text="Enter a new prompt:", font=("Corbel", 15))  #creates a label prompting the user to enter a new prompt in the text box
     prompt_label.grid(column=0, row=1, pady=0)
+
+    prompt_out = val.split(",")[0]  #splits the item string into just the prompt, so it can be used in a select statement to select the relevant itemid
+    print(type(prompt_out))
+    mycursor.execute('SELECT ItemID FROM prompts WHERE PromptOut = (%s)' % (prompt_out))
+    global chosen_itemid
+    chosen_itemid = mycursor.fetchall()
+    chosen_itemid = str(chosen_itemid)
+    disallowed_characters = "(),[]"
+    for character in disallowed_characters:  # removes all unwanted punctuation from prompt string
+        chosen_itemid = chosen_itemid.replace(character, "")
+    chosen_itemid = int(chosen_itemid)
+
     global prompt_entry
     prompt_entry = Entry(gui)  #creates a text entry box
     prompt_entry.grid(column=0, row=2, pady=10)
@@ -178,15 +189,20 @@ def item_manage(index, val):  #function for management of a specific item
     response_entry_btn.grid(column=0, row=6)
 
 
+
 def prompt_confirm():
     new_prompt = prompt_entry.get()  # assigns the user's new prompt input to a variable
-    prompt_statement = 'UPDATE prompts SET PromptOut= (%s) WHERE ItemID = (%s)'
-    data = (new_prompt, 3)  #NOT WORKING!!! UPDATE STATEMENT DOESNT WORK, 3 SHOULD BE THE ITEMS ITEMID
+    prompt_statement = 'UPDATE prompts SET PromptOut = (%s) WHERE ItemID = (%s)'
+    data = (new_prompt, chosen_itemid)  #NOT WORKING!!! 3 SHOULD BE THE ITEM'S ITEMID
     mycursor.execute(prompt_statement, data)
+    mydb.commit()
 
 def response_confirm():
     new_response = response_entry.get()  # assigns the user's new responses input to a variable
-
+    response_statement = 'UPDATE responses SET ResponseOut = (%s) WHERE ItemID = (%s)'
+    data = (new_response, chosen_itemid)  # NOT WORKING!!! 3 SHOULD BE THE ITEM'S ITEMID
+    mycursor.execute(response_statement, data)
+    mydb.commit()
 
 # OPENING MENU:
 logo = PhotoImage(file="logo.png")  # logo
