@@ -128,7 +128,7 @@ def set_management():  # menu to make changes to selected sest
     print(responses)
 
     n=0  #variable to determine position within listbox to insert prompt to, increments with each iteration
-    for x in prompts:
+    for prompt in prompts:
         disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
         prompt = str(prompt)
         for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
