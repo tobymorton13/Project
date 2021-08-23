@@ -211,10 +211,20 @@ def create_new_item():  #function to insert new item and its prompt and response
     new_prompt = new_prompt_entry.get()  #assigns the new prompt input by the user to a variable
     new_response = new_response_entry.get()  #assigns the new response input by the user to a variable
     max=max_item_id()  #call this function so the new item's itemid can be an increment of the previous max value
+    max = str(max)
+    disallowed_characters = "(),[]"
+    for character in disallowed_characters:  # removes all unwanted punctuation from chosen item id
+        max = max.replace(character, "")
+    max = int(max)  #converts max back to int datatype to allow it to be inserted to table
+    max += 1  #increments the previous max itemid by 1 to allow for the variable's use as the new itemid
     now = datetime.now()
     formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')  #reformats the current time to allow it to be inserted to database
-    mycursor.execute('INSERT INTO items (ItemID, LastReview) VALUES (%s, %s)' (max, formatted_date))
+    mycursor.execute('INSERT INTO items (ItemID, LastReview, SetID) values(%s, %s, %s)', (max, formatted_date, global_chosen_setid))  #inserts new values to items table
     mydb.commit()
+    mycursor.execute('INSERT INTO prompts (ItemID, PromptOut) values(%s, %s)', (max, new_prompt))  #inserts new promptout and relevant itemid to prompts table
+    mycursor.execute('INSERT INTO responses (ItemID, ResponseOut) values(%s, %s)', (max, new_response))  #inserts new responseout and relevant itemid to responses table
+    mydb.commit()
+    set_management()
 
 def max_item_id():  #function to find the highest item id value
     mycursor.execute('SELECT ItemID FROM items')
@@ -241,6 +251,7 @@ def item_delete_func():  #function used to delete an item when the delete button
     mycursor.execute('DELETE FROM responses WHERE ItemID = (%s)' % (chosen_itemid))  #deletes all rows in responses table corresponding to chosen itemid
     mycursor.execute('DELETE FROM items WHERE ItemID = (%s)' % (chosen_itemid))  #deletes all rows in items table corresponding to chosen itemid
     mydb.commit()
+    set_management()
 
 # OPENING MENU:
 logo = PhotoImage(file="logo.png")  # logo
