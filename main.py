@@ -181,7 +181,7 @@ def item_manage(index, val):  #function for management of a specific item
 def prompt_confirm():
     new_prompt = prompt_entry.get()  # assigns the user's new prompt input to a variable
     prompt_statement = 'UPDATE prompts SET PromptOut= (%s) WHERE ItemID = (%s)'
-    data = (new_prompt, 3)
+    data = (new_prompt, 3)  #NOT WORKING!!! UPDATE STATEMENT DOESNT WORK, 3 SHOULD BE THE ITEMS ITEMID
     mycursor.execute(prompt_statement, data)
 
 def response_confirm():
