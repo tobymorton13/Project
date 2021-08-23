@@ -133,7 +133,6 @@ def set_management():  # menu to make changes to selected sest
         prompt = str(prompt)
         for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
             prompt = prompt.replace(character, "")
-            response = response.replace(character, "")
         items_lb.insert(n, prompt)
         n+=1
 
