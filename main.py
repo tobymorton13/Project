@@ -148,16 +148,35 @@ def set_management():  # menu to make changes to selected set
         n+=1
     def confirm_selection(items_lb):
         selection = items_lb.curselection()
-        if selection:
-            index = selection[0]
-            val = items_lb.get( index  )
-            item_manage(val)
-    confirm_button = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb))
+        if selection:  #once a selection has been made, if statement is triggered.
+            index = selection[0]  #stores the index of the selected item as a variable, also equal to the item's itemid
+            val = items_lb.get(index)
+            item_manage(index, val)
+    confirm_button = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb))  #button to confirm selection of an item, triggers confirm_selection function
     confirm_button.grid(column=0, row=4, pady="10")
 
-def item_manage(val):  #function for management of a specific item
+
+def item_manage(index, val):  #function for management of a specific item
     clear_window()
+    print(index)
     print(val)
+    item_label = Label(gui, text=val, font=("Corbel", 25))  #creates a header of the selected item
+    item_label.grid(column=0, row =0, padx="400")
+    prompt_label = Label(gui, text="Enter a new prompt:", font=("Corbel", 15))  #creates a label prompting the user to enter a new prompt in the text box
+    prompt_label.grid(column=0, row=1, pady=0)
+    prompt_entry = Entry(gui)  #creates a text entry box
+    prompt_entry.grid(column=0, row=2, pady=10)
+    new_prompt = prompt_entry.get()  #assigns the user's input to a variable
+    response_label = Label(gui, text="Enter a new response:", font=("Corbel", 15))  #creates a label prompting the user to enter a new response in the text box
+    response_label.grid(column=0, row=4, pady=0)
+    response_entry = Entry(gui)  #creates a text entry box
+    response_entry.grid(column=0, row=5, pady=10)
+    new_response = response_entry.get()  #assigns the user's input to a variable
+    print(new_prompt)
+    print(new_response)
+
+
+
 
 # OPENING MENU:
 logo = PhotoImage(file="logo.png")  # logo
