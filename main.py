@@ -159,7 +159,7 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
                         background="gray3", foreground="white", font=("Corbel", 13))
     return_btn.grid(column=0, row=4, pady="2")
 
-def lessons():
+def lessons():  #function used when user begins lessons
     clear_window()
     print(global_items_to_learn)
     for item in global_items_to_learn:
@@ -173,24 +173,94 @@ def lessons():
             prompt_lbl_text = prompt_lbl_text.replace(character, "")
         prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
         prompt_lbl.grid(column=0, row=0, padx="270", pady="10")
-        global user_entry
-        user_entry = Entry(gui, width=30, font=("Corbel", 15))  #creates entry box for user to enter response to prompt
+        show_correct_btn = Button(gui, text="Show Response", command= lambda: lesson_show_response(item), font=("Corbel", 25), background="springgreen2",)
+        show_correct_btn.grid(column=0, row=2, pady=20)
+
+    def lesson_show_response(item):
+        mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (
+            item))  # extracts correct response from database for selected itemid
+        correct_response = mycursor.fetchall()
+        correct_response = str(correct_response[0])  # sets correct_response variable as a string
+        disallowed_characters = "{}',()"
+        for character in disallowed_characters:  # removes all punctuation from correct response and user response to ensure correct response is not incorrect
+            correct_response = correct_response.replace(character, "")
+        correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 35))
+        correct_response_lbl.grid(column=0, row=2)
+        entry_confirm_btn = Button(gui, text="Hide Response", command=lambda: lesson_hide_response(item),
+                                   font=("Corbel", 25), background="springgreen2", )
+        entry_confirm_btn.grid(column=0, row=2, pady=20)
+        clear_window()
+
+    def lesson_hide_response(item):
+        response_entry_header = Label(gui, text="Enter the response below")
+        response_entry_header.grid(column=0, row=0)
+
+def reviews():  #function used when user begins reviews
+    clear_window()
+    for item in global_items_to_review:
+        item = int(item)
+        mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))
+        prompt = mycursor.fetchall()
+        prompt_lbl_text = str(prompt[0])
+        disallowed_characters = "{}',()"
+        for character in disallowed_characters:  # removes all unwanted punctuation from prompt string
+            prompt_lbl_text = prompt_lbl_text.replace(character, "")
+        prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
+        prompt_lbl.grid(column=0, row=0, padx="270", pady="10")
+        user_entry = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter response to prompt
         user_entry.grid(column=0, row=1)
-        entry_confirm_btn = Button(gui, text="Confirm Response", command= lambda: confirm_prompt(item), font=("Corbel", 25), background="springgreen2",)
+        entry_confirm_btn = Button(gui, text="Confirm Response", command=lambda: review_confirm_response(item, user_entry),
+                                   font=("Corbel", 25), background="springgreen2", )
         entry_confirm_btn.grid(column=0, row=2, pady=20)
 
-def confirm_prompt(item):
-    user_input = user_entry.get()
-    mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (item))
-    correct_response = mycursor.fetchall()
-    correct_response = str(correct_response[0])
-    print(correct_response)
+
+    def review_confirm_response(item, user_entry):  #function to
+        user_input = user_entry.get()
+        mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (item))  #extracts correct response from database for selected itemid
+        correct_response = mycursor.fetchall()
+        correct_response = str(correct_response[0])  #sets correct_response variable as a string
+        disallowed_characters = "{}',()"
+        for character in disallowed_characters:  # removes all punctuation from correct response and user response to ensure correct response is not incorrect
+            correct_response = correct_response.replace(character, "")
+            user_input = user_input.replace(character, "")
+        user_input.lower()  #ensures user response is all lower case to prevent correct reponse being flagged as incorrect
+        lower_correct_response = correct_response.lower()  #enures correct response is all lower case to prevent correct reponse being flagged as incorrect
+        if user_input == lower_correct_response:
+            correct_lbl = Label(gui, text="Correct", font=("Corbel", 25))
+            correct_lbl.grid(column=0, row=3, pady=1)
+            continue_btn = Button(gui, text="Continue", background="black", foreground="white", command=next_item(item), font=("Corbel",15))
+            continue_btn.grid(column=0, row=4, pady=20)
+        else:  #if user enters incorrect response
+            clear_window()
+            correct = False
+            while correct is False:
+                incorrect_lbl = Label(gui, text="Incorrect", font=("Corbel", 25))  #creates label saying incorrect
+                incorrect_lbl.grid(column=0, row=0, pady=5, padx=500)
+                correct_response_text = ("The correct response was "+correct_response)
+                correct_response_lbl = Label(gui, text=correct_response_text, font=("Corbel", 17))  #creates label showing correct response
+                correct_response_lbl.grid(column=0, row=1, pady=20)
+                reenter_lbl = Label(gui, text="Enter the correct response below", font=("Corbel", 15))  #prompts user to enter correct response
+                reenter_lbl.grid(column=0, row=2, pady=5)
+                user_entry = Entry(gui, width=30,
+                                   font=("Corbel", 15))  # creates entry box for user to enter response to prompt
+                user_entry.grid(column=0, row=1)
+                reentry_confirm_btn = Button(gui, text="Confirm Response", command=lambda: reentry_confirm(lower_correct_response, user_entry),
+                                           font=("Corbel", 25), background="springgreen2")
+                reentry_confirm_btn.grid(column=0, row=2, pady=20)
+
+        def reentry_confirm(lower_correct_response, user_entry):
+            if user_entry == lower_correct_response:
+                correct=True
+            else:
+                correct=False
+            return(correct)
 
 
-def reviews():
-    clear_window()
-    print(global_items_to_review)
-
+    def next_item(item):
+        clear_window()
+        item=str(item)  #converts item from int back to string to allow it to be found and removed from review list
+        global_items_to_review.remove(item)
+        reviews()
 
 def set_management():  # menu to make changes to selected set
     clear_window()
