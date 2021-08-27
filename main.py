@@ -29,9 +29,7 @@ def clear_window():  # function used whenever a new page is loaded and all widge
 
 
 def fetch_sets():  # set selection menu
-    # remove opening menu labels/buttons:
-    logo_label.grid_forget()
-    browse_button.grid_forget()
+    clear_window()  # remove opening menu labels/buttons:
     set_select_header = Label(gui, text="Select a set below:", font=("Corbel", 30))  # creates header text label
     set_select_header.grid(column=0, row=0, padx="150")
     row_n = 1  # variable which will increment each set button's vertical position in window
@@ -59,7 +57,7 @@ def review_check(last_rev, max_dur):  #function to verify whether an item is due
         last_rev = last_rev.replace(character, "")
     x= last_rev
     if (x[5] == "0") and (x[8] == "0"):
-        last_rev_datetime = last_rev_datetime = datetime(int(x[0:3]), int(x[6]), int(x[9]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
+        last_rev_datetime = last_rev_datetime = datetime(int(x[0:4]), int(x[6]), int(x[9]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
     elif (x[5] == "0"):
         last_rev_datetime = datetime(int(x[0:4]), int(x[6]), int(x[8:10]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
     elif (x[8] == "0"):
@@ -67,7 +65,11 @@ def review_check(last_rev, max_dur):  #function to verify whether an item is due
     else:
         last_rev_datetime = datetime(int(x[0:4]), int(x[5:7]), int(x[8:10]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
     duration = now - last_rev_datetime
-    print(duration)
+    if duration.total_seconds() > max_dur:
+        return(True)
+    else:
+        return(False)
+
 
 def set_options(chosen_set):  # chosen set option menu, from here, lessons, reviews and edits to set can be completed
     clear_window()
@@ -76,10 +78,6 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     set_options_header = Label(gui, text=chosen_set,
                                font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_options_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
-    set_manage_button = Button(gui, text="Manage Set", command=set_management, font=("Corbel", 17), height=1,
-                               width=13)  # creates a "manage set" button
-    set_manage_button.grid(column=0, row=1, padx="520", pady="5")  # places the manage set button on the canvas
-    # !!!!!CREATE QUERY TO EXTRACT SET ID FOR "CHOSEN SET", USE JOIN STATEMENTS TO EXTRACT ITEMID's and SRSPos and Last Review
     mycursor.execute('SELECT SetID, SetName FROM sets')  # sql statement to select all setid's and setnames
     set_list = mycursor.fetchall()  # assign output of sql statement to set_list variable
     tuple_in_list = [set_list for set_list in set_list if
@@ -91,15 +89,10 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
         'SELECT items.ItemID FROM Items INNER JOIN sets ON Items.SetID = sets.SetID WHERE sets.SetID = (%s)' % (
             chosen_setid))
     itemid_list = mycursor.fetchall()
-    items_to_learn = []
-    lessons_btn_text = ("You have n lessons")
-    reviews_btn_text = ("You have n reviews")
-    lessons_btn = Button(gui, text=lessons_btn_text, command=lessons, font=("Corbel", 17), height=1,
-                               width=15)
-    lessons_btn.grid(column=0, row=2, pady="5")
-    reviews_btn = Button(gui, text=reviews_btn_text, command=reviews, font=("Corbel", 17), height=1,
-                         width=15)
-    reviews_btn.grid(column=0, row=3, pady="5")
+    items_to_learn = []  # creates empty list to store items due for lesson
+    items_to_review = []  # creates empty list to store items due for review
+    learned_item_count = 0  # will be used to calculate set completion
+    total_item_count = 0  # ^^^
     for i in itemid_list:  # loop to verify which items are due for a lesson or review
         i = str(i)  # convert each itemid from tuple to string
         disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
@@ -111,30 +104,68 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
         mycursor.execute('SELECT LastReview FROM items WHERE ItemID = (%s)' % (
             i))  # sql statement to extract datetime of item i's last review
         i_lastreview = mycursor.fetchall()  # assigns the datetime of item i's last review to a variable
-        now = str(datetime.now())  #store current date time in a variable
-        print()
-        duration = "x"
         i_srspos = str(i_srspos)
         if i_srspos == "[(0,)]":
-            items_to_learn += i
+            items_to_learn.append(i)
         elif i_srspos == "[(1,)]":
-            review_check(i_lastreview, 4)
-            #need to add if i_lastreview - datetime.now() > 4 hours, add to review stack.
+            if review_check(i_lastreview, 14399):
+                items_to_review.append(i)
+        elif i_srspos == "[(2,)]":
+            if review_check(i_lastreview, 28799):
+                items_to_review.append(i)
+        elif i_srspos == "[(3,)]":
+            if review_check(i_lastreview, 86399):
+                items_to_review.append(i)
+        elif i_srspos == "[(4,)]":
+            if review_check(i_lastreview, 172799):
+                items_to_review.append(i)
+        elif i_srspos == "[(5,)]":
+            if review_check(i_lastreview, 647999):
+                items_to_review.append(i)
+        elif i_srspos == "[(6,)]":
+            if review_check(i_lastreview, 1295999):
+                items_to_review.append(i)
+        elif i_srspos == "[(7,)]":
+            if review_check(i_lastreview, 2591999):
+                items_to_review.append(i)
+        elif i_srspos == "[(8,)]":
+            if review_check(i_lastreview, 10367999):
+                items_to_review.append(i)
         else:
-            print()
+            learned_item_count += 1
+        total_item_count += 1
+    available_lesson_count = str(len(items_to_learn))
+    available_review_count = str(len(items_to_review))
+    global global_items_to_learn  #adds global versions of lesson/review lists to allow them to be used in other functions
+    global_items_to_learn = items_to_learn
+    global global_items_to_review
+    global_items_to_review = items_to_review
+    if available_lesson_count == "1":  # adjusts string based on whether plural for lesson is appropriate
+        lessons_btn_text = ("You have " + available_lesson_count + " lesson available")
+    else:
+        lessons_btn_text = ("You have "+available_lesson_count+" lessons available")
+    if available_review_count == "1":
+        reviews_btn_text = ("You have " + available_review_count + " review available")
+    else:
+        reviews_btn_text = ("You have "+available_review_count+" reviews available")
+    lessons_btn = Button(gui, text=lessons_btn_text, command=lessons, font=("Corbel", 17), height=2, width=23, background = "yellow")
+    lessons_btn.grid(column=0, row=1, pady="5")
+    reviews_btn = Button(gui, text=reviews_btn_text, command=reviews, font=("Corbel", 17), height=2, width=23, background = "yellow")
+    reviews_btn.grid(column=0, row=2, pady="5")
+    set_manage_button = Button(gui, text="Manage Set", command=set_management, background="gray3", foreground="white", font=("Corbel", 13), height=1,
+                               width=15)  # creates a "manage set" button
+    set_manage_button.grid(column=0, row=3, pady="2")  # places the manage set button on the canvas
     return_btn = Button(gui, text="Go back", command=lambda: fetch_sets(), height=1, width=15,
                         background="gray3", foreground="white", font=("Corbel", 13))
     return_btn.grid(column=0, row=4, pady="2")
-    available_lessons = len(items_to_learn)
 
 def lessons():
-    print("lessons")
+    clear_window()
+    print(global_items_to_learn)
 
 def reviews():
-    print("reviews")
-
-
-
+    clear_window()
+    print(global_items_to_review)
 
 
 def set_management():  # menu to make changes to selected set
