@@ -19,7 +19,7 @@ sets = mycursor.fetchall()  # assigns output of select query to set_data variabl
 
 gui = Tk()  # creates gui window
 gui.title("SimpleSRS")  # gives the window a title
-gui.geometry("1280x720")  # resizes window to 1280x720p
+gui.geometry("1280x750")  # resizes window to 1280x720p
 
 
 def clear_window():  # function used whenever a new page is loaded and all widgets from previous menu need to be cleared
@@ -42,7 +42,8 @@ def fetch_sets():  # set selection menu
                         height=1, width=15)
         button.grid(column=0, row=row_n, padx="520", pady="5")
         row_n += 1
-
+    quit_btn = Button(gui, text="Quit", command=gui.destroy, background = "firebrick3", foreground = "white", font=("Corbel", 17), width=12)
+    quit_btn.grid(row=row_n, pady=5)
 
 def remove_punctuation(i):  # function to remove unwanted punctuation from a string
     i = str(i)
@@ -50,6 +51,23 @@ def remove_punctuation(i):  # function to remove unwanted punctuation from a str
     for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
         i = i.replace(character, "")
 
+def review_check(last_rev, max_dur):  #function to verify whether an item is due for a review
+    now = datetime.now()
+    last_rev = str(last_rev)
+    disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
+    for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
+        last_rev = last_rev.replace(character, "")
+    x= last_rev
+    if (x[5] == "0") and (x[8] == "0"):
+        last_rev_datetime = last_rev_datetime = datetime(int(x[0:3]), int(x[6]), int(x[9]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
+    elif (x[5] == "0"):
+        last_rev_datetime = datetime(int(x[0:4]), int(x[6]), int(x[8:10]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
+    elif (x[8] == "0"):
+        last_rev_datetime = datetime(int(x[0:4]), int(x[5:7]), int(x[9]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
+    else:
+        last_rev_datetime = datetime(int(x[0:4]), int(x[5:7]), int(x[8:10]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
+    duration = now - last_rev_datetime
+    print(duration)
 
 def set_options(chosen_set):  # chosen set option menu, from here, lessons, reviews and edits to set can be completed
     clear_window()
@@ -59,7 +77,7 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
                                font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_options_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
     set_manage_button = Button(gui, text="Manage Set", command=set_management, font=("Corbel", 17), height=1,
-                               width=15)  # creates a "manage set" button
+                               width=13)  # creates a "manage set" button
     set_manage_button.grid(column=0, row=1, padx="520", pady="5")  # places the manage set button on the canvas
     # !!!!!CREATE QUERY TO EXTRACT SET ID FOR "CHOSEN SET", USE JOIN STATEMENTS TO EXTRACT ITEMID's and SRSPos and Last Review
     mycursor.execute('SELECT SetID, SetName FROM sets')  # sql statement to select all setid's and setnames
@@ -74,6 +92,14 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
             chosen_setid))
     itemid_list = mycursor.fetchall()
     items_to_learn = []
+    lessons_btn_text = ("You have n lessons")
+    reviews_btn_text = ("You have n reviews")
+    lessons_btn = Button(gui, text=lessons_btn_text, command=lessons, font=("Corbel", 17), height=1,
+                               width=15)
+    lessons_btn.grid(column=0, row=2, pady="5")
+    reviews_btn = Button(gui, text=reviews_btn_text, command=reviews, font=("Corbel", 17), height=1,
+                         width=15)
+    reviews_btn.grid(column=0, row=3, pady="5")
     for i in itemid_list:  # loop to verify which items are due for a lesson or review
         i = str(i)  # convert each itemid from tuple to string
         disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
@@ -92,15 +118,23 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
         if i_srspos == "[(0,)]":
             items_to_learn += i
         elif i_srspos == "[(1,)]":
-            print()
+            review_check(i_lastreview, 4)
             #need to add if i_lastreview - datetime.now() > 4 hours, add to review stack.
         else:
             print()
-
-
-
-
+    return_btn = Button(gui, text="Go back", command=lambda: fetch_sets(), height=1, width=15,
+                        background="gray3", foreground="white", font=("Corbel", 13))
+    return_btn.grid(column=0, row=4, pady="2")
     available_lessons = len(items_to_learn)
+
+def lessons():
+    print("lessons")
+
+def reviews():
+    print("reviews")
+
+
+
 
 
 def set_management():  # menu to make changes to selected set
@@ -151,19 +185,21 @@ def set_management():  # menu to make changes to selected set
             index = selection[0]  #stores the index of the selected item as a variable, also equal to the item's itemid
             val = items_lb.get(index)
             item_manage(val)
-    confirm_btn = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb), background="springgreen2")  #button to confirm selection of an item, triggers confirm_selection function
-    confirm_btn.grid(column=0, row=4, pady="10")
-    new_item_btn = Button(gui, text="New Item...", command= lambda: new_item(), background="sky blue", width=20)
-    new_item_btn.grid(column=0, row=5, pady="10")
+    confirm_btn = Button(gui, text="Confirm Selection", command= lambda: confirm_selection(items_lb), background="springgreen2", font=("Corbel", 13))  #button to confirm selection of an item, triggers confirm_selection function
+    confirm_btn.grid(column=0, row=4, pady="2")
+    new_item_btn = Button(gui, text="New Item...", command= lambda: new_item(), background="sky blue", width=17, font=("Corbel", 13))
+    new_item_btn.grid(column=0, row=5, pady="2")
+    return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=20, background="gray3", foreground="white", font=("Corbel", 13))
+    return_btn.grid(column=0, row=6, pady="2")
 
 
 def item_manage(val):  #function for management of a specific item
     clear_window()
     item_label = Label(gui, text=val, font=("Corbel", 25))  #creates a header of the selected item
-    item_label.grid(column=0, row =0, padx="400")
+    item_label.grid(column=0, row =0)
 
     prompt_label = Label(gui, text="Enter the updated prompt:", font=("Corbel", 15))  #creates a label prompting the user to enter a new prompt in the text box
-    prompt_label.grid(column=0, row=1, pady=0)
+    prompt_label.grid(column=0, row=1, padx=480, pady=1)
 
     prompt_out = val.split(",")[0]  #splits the item string into just the prompt, so it can be used in a select statement to select the relevant itemid
     mycursor.execute('SELECT ItemID FROM prompts WHERE PromptOut = (%s)' % (prompt_out))  #selects chosen item's itemid
@@ -192,7 +228,10 @@ def item_manage(val):  #function for management of a specific item
     item_delete_btn = Button(gui, text="Delete Item", command=lambda: item_delete_func(), height=1, width=15, font=("Corbel", 15), background = "firebrick3", foreground = "white")  #creates an item delete button
     item_delete_btn.grid(column=0, row=7, pady=20)
 
-def new_item():
+    return_btn = Button(gui, text="Go back", command=lambda: set_management(), height=1, width=20, background="gray3", foreground="white", font=("Corbel", 13))
+    return_btn.grid(column=0, row=8, pady=2)
+
+def new_item():  #function for page allowing creation of a new item
     clear_window()
     new_prompt_header = Label(gui, text="Enter a new prompt:", font=("Corbel", 20))  #creates a label prompting user to input their new item's prompt
     new_prompt_header.grid(column=0, row=0, pady=10, padx = 500)
@@ -206,6 +245,8 @@ def new_item():
     new_response_entry.grid(column=0, row=4)
     new_item_confirm_btn = Button(gui, text="Confirm prompt and response", command=lambda: create_new_item(), height=1, width=25, background = "springgreen2", font=("Corbel", 18))  #creates a confirmation button which calles the create_new_item function when pressed
     new_item_confirm_btn.grid(column=0, row=5, pady=30)
+    return_btn = Button(gui, text="Go back", command=lambda: set_management(), height=1, width=20, background="gray3", foreground="white", font=("Corbel", 13))
+    return_btn.grid(column=0, row=6, pady="2")
 
 def create_new_item():  #function to insert new item and its prompt and response to database
     new_prompt = new_prompt_entry.get()  #assigns the new prompt input by the user to a variable
