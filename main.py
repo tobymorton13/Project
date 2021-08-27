@@ -152,8 +152,8 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     lessons_btn.grid(column=0, row=1, pady="5")
     reviews_btn = Button(gui, text=reviews_btn_text, command=reviews, font=("Corbel", 17), height=2, width=23, background = "yellow")
     reviews_btn.grid(column=0, row=2, pady="5")
-    set_manage_button = Button(gui, text="Manage Set", command=set_management, background="gray3", foreground="white", font=("Corbel", 13), height=1,
-                               width=15)  # creates a "manage set" button
+    set_manage_button = Button(gui, text="Edit Set", command=set_management, background="gray3", foreground="white", font=("Corbel", 13), height=1,
+                               width=15)  # edit a "manage set" button
     set_manage_button.grid(column=0, row=3, pady="2")  # places the manage set button on the canvas
     return_btn = Button(gui, text="Go back", command=lambda: fetch_sets(), height=1, width=15,
                         background="gray3", foreground="white", font=("Corbel", 13))
@@ -162,6 +162,30 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
 def lessons():
     clear_window()
     print(global_items_to_learn)
+    for item in global_items_to_learn:
+        correct_status = False
+        item = int(item)
+        mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))
+        prompt = mycursor.fetchall()
+        prompt_lbl_text = str(prompt[0])
+        disallowed_characters = "{}',()"
+        for character in disallowed_characters:  # removes all unwanted punctuation from prompt string
+            prompt_lbl_text = prompt_lbl_text.replace(character, "")
+        prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
+        prompt_lbl.grid(column=0, row=0, padx="270", pady="10")
+        global user_entry
+        user_entry = Entry(gui, width=30, font=("Corbel", 15))  #creates entry box for user to enter response to prompt
+        user_entry.grid(column=0, row=1)
+        entry_confirm_btn = Button(gui, text="Confirm Response", command= lambda: confirm_prompt(item), font=("Corbel", 25), background="springgreen2",)
+        entry_confirm_btn.grid(column=0, row=2, pady=20)
+
+def confirm_prompt(item):
+    user_input = user_entry.get()
+    mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (item))
+    correct_response = mycursor.fetchall()
+    correct_response = str(correct_response[0])
+    print(correct_response)
+
 
 def reviews():
     clear_window()
