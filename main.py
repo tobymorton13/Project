@@ -173,44 +173,35 @@ def lessons():  # function used when user begins lessons
 
 def reviews():  # function used when user begins reviews
     clear_window()
-    review_count = len(global_items_to_review)
-    i = 0
-    for i in range(review_count):
-        item = global_items_to_review[i]
-        clear_window()
-        item = int(item)
-        mycursor.execute(
-            'SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))  # extracts the prompt for the current itemID
-        prompt = remove_punc(
-            str(mycursor.fetchall()))  # assigns output of sql statement with all unwanted punctuation removed, to prompt variable
-        print(prompt)
-        review_response_page(prompt, item)
-
-
-def review_response_page(prompt, item):
-    review_header = Label(gui, text=prompt, font=("Corbel", 28))  # creates a header, the current item's prompt
-    review_header.grid(column=0, row=0, padx=450, pady=30)
-    review_instruction = Label(gui, text="Enter your response below:", font=("Corbel", 18))
-    review_instruction.grid(column=0, row=1)
-    review_entry = Entry(gui, width=27, font=("Corbel", 13))
-    review_entry.grid(column=0, row=2, pady=10)
-    review_confirm_btn = Button(gui, text="Confirm", command=lambda: verify_response(review_entry, item), width=17,
-                                background="springgreen2", font=("Corbel", 15), height=1)
-    review_confirm_btn.grid(column=0, row=3)
-    if review_confirm_btn is True:
-        print("correct")
-    else:
-        print("incorrect")
-
+    for item in global_items_to_review:
+        answer_status=False
+        while not answer_status:
+            clear_window()
+            item = int(item)
+            mycursor.execute(
+                'SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))  # extracts the prompt for the current itemID
+            prompt = remove_punc(
+                str(mycursor.fetchall()))  # assigns output of sql statement with all unwanted punctuation removed, to prompt variable
+            print(prompt)
+            review_header = Label(gui, text=prompt, font=("Corbel", 28))  # creates a header, the current item's prompt
+            review_header.grid(column=0, row=0, padx=450, pady=30)
+            review_instruction = Label(gui, text="Enter your response below:", font=("Corbel", 18))
+            review_instruction.grid(column=0, row=1)
+            review_entry = Entry(gui, width=27, font=("Corbel", 13))
+            review_entry.grid(column=0, row=2, pady=10)
+            review_confirm_btn = Button(gui, text="Confirm", command=lambda: verify_response(review_entry, item), width=17,
+                                        background="springgreen2", font=("Corbel", 15), height=1)
+            review_confirm_btn.grid(column=0, row=3)
 
 def verify_response(review_entry, item):
     user_response = str(review_entry.get())
     mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID=(%s)' % (item))
     correct_response = remove_punc(str(mycursor.fetchall()))
-        if user_response.lower() == correct_response.lower():
-            return(True)
-        else:
-            return(False)
+    if user_response.lower() == correct_response.lower():
+         print("correct")
+         answer_status = True
+    else:
+        print("incorrect")
 
 
 
