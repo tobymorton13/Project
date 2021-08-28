@@ -173,35 +173,43 @@ def lessons():  # function used when user begins lessons
 
 def reviews():  # function used when user begins reviews
     clear_window()
-    for item in global_items_to_review:
-        answer_status=False
-        while not answer_status:
-            clear_window()
-            item = int(item)
-            mycursor.execute(
-                'SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))  # extracts the prompt for the current itemID
-            prompt = remove_punc(
-                str(mycursor.fetchall()))  # assigns output of sql statement with all unwanted punctuation removed, to prompt variable
-            print(prompt)
-            review_header = Label(gui, text=prompt, font=("Corbel", 28))  # creates a header, the current item's prompt
-            review_header.grid(column=0, row=0, padx=450, pady=30)
-            review_instruction = Label(gui, text="Enter your response below:", font=("Corbel", 18))
-            review_instruction.grid(column=0, row=1)
-            review_entry = Entry(gui, width=27, font=("Corbel", 13))
-            review_entry.grid(column=0, row=2, pady=10)
-            review_confirm_btn = Button(gui, text="Confirm", command=lambda: verify_response(review_entry, item), width=17,
-                                        background="springgreen2", font=("Corbel", 15), height=1)
-            review_confirm_btn.grid(column=0, row=3)
+    i=0
+    review_count = len(global_items_to_review)
+    for i in range(review_count):
+        clear_window()
+        item = int(global_items_to_review[0])
+        mycursor.execute(
+            'SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))  # extracts the prompt for the current itemID
+        prompt = remove_punc(
+            str(mycursor.fetchall()))  # assigns output of sql statement with all unwanted punctuation removed, to prompt variable
+        print(prompt)
+        review_header = Label(gui, text=prompt, font=("Corbel", 28))  # creates a header, the current item's prompt
+        review_header.grid(column=0, row=0, padx=450, pady=30)
+        review_instruction = Label(gui, text="Enter your response below:", font=("Corbel", 18))
+        review_instruction.grid(column=0, row=1)
+        review_entry = Entry(gui, width=27, font=("Corbel", 13))
+        review_entry.grid(column=0, row=2, pady=10)
+        review_confirm_btn = Button(gui, text="Confirm", width=17,
+                                    background="springgreen2", command = lambda: verify_response(review_entry, item), font=("Corbel", 15), height=1)
+        review_confirm_btn.grid(column=0, row=3)
+        global review_outcome
+        review_outcome = False
+        while review_outcome is False:
 
-def verify_response(review_entry, item):
-    user_response = str(review_entry.get())
-    mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID=(%s)' % (item))
-    correct_response = remove_punc(str(mycursor.fetchall()))
+
+
+def verify_response(user_input, item):
+    mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (item))
+    correct_response = remove_punc(str(mycursor.fetchall()[0]))
+    user_response = user_input.get()
+    print(correct_response)
+    print(user_response)
     if user_response.lower() == correct_response.lower():
-         print("correct")
-         answer_status = True
+        print("correct")
+        review_outcome = True
     else:
         print("incorrect")
+        review_outcome = False
 
 
 
