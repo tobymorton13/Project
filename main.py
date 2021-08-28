@@ -208,8 +208,8 @@ def lesson_hide_response(item):
 
 def reviews():  # function used when user begins reviews
     clear_window()
-    answer_status = False
     for item in global_items_to_review:
+        clear_window()
         item = int(item)
         mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (
             item))  # sql statement to extract prompt from database for selected item id
@@ -222,7 +222,7 @@ def reviews():  # function used when user begins reviews
         prompt_lbl_text = str(prompt[0])
         prompt_lbl_text = remove_punc(prompt_lbl_text)
         prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
-        prompt_lbl.grid(column=0, row=0, padx="270", pady="10")
+        prompt_lbl.grid(column=0, row=0, padx="450", pady="10")
         user_entry = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter response to prompt
         user_entry.grid(column=0, row=1)
         entry_confirm_btn = Button(gui, text="Confirm Response",
@@ -246,21 +246,29 @@ def review_confirm_response(item, user_entry, item_srspos):  # function to
     if user_input == lowercase_correct_response:  # if user enters correct response:
         clear_window()
         print(item)
-        srspos_update_statement = 'UPDATE items SET SRSPos = (%s) WHERE ItemID = (%s)'
+        srspos_update_statement = 'UPDATE items SET SRSPos = (%s) WHERE ItemID = (%s)'  # sql statement to increase the item's srs pos if the correct response is entered by the user
         srspos_update_data = (item_srspos, item)
         mycursor.execute(srspos_update_statement, srspos_update_data)
         mydb.commit()
         now = str(datetime.now())
-        lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'
+        lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  #sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
         lastreview_update_data = (now, item)
         mycursor.execute(lastreview_update_statement, lastreview_update_data)
         mydb.commit()
         next_item(item)
     else:  # if user enters incorrect response:
         print("incorrect")
+        clear_window()
+        incorrect_lbl = Label(gui, text="Incorrect, the correct response was:", font=("Corbel", 35))
+        incorrect_lbl.grid(column=0, row=0, padx="270", pady="10")
+        correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")
+        correct_response_lbl.grid(column=0, row=1, pady="10")
+        user_entry_2 = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter correct response to prompt
+        user_entry_2.grid(column=0, row=2)
+        entry_confirm_btn = Button(gui, text="Confirm Response", command=lambda: review_confirm_response(item, user_entry_2, item_srspos),font=("Corbel", 25), background="springgreen2", )
+        entry_confirm_btn.grid(column=0, row=3, pady=20)
 
-
-def next_item(item):
+def next_item(item):  #function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
     item = str(item)  # converts item from int back to string to allow it to be found and removed from review list
     global_items_to_review.remove(item)
