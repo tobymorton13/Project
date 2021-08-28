@@ -169,96 +169,51 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
 
 def lessons():  # function used when user begins lessons
     clear_window()
-    print(global_items_to_learn)
-    for item in global_items_to_learn:
-        correct_status = False
-        while correct_status is False:
-            item = int(item)
-            mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))
-            prompt = mycursor.fetchall()
-            prompt_lbl_text = str(prompt[0])
-            disallowed_characters = "{}',()"
-            for character in disallowed_characters:  # removes all unwanted punctuation from prompt string
-                prompt_lbl_text = prompt_lbl_text.replace(character, "")
-            prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
-            prompt_lbl.grid(column=0, row=0, padx="270", pady="10")
-            show_correct_btn = Button(gui, text="Show Response", command=lambda: lesson_show_response(item),
-                                      font=("Corbel", 25), background="springgreen2", )
-            show_correct_btn.grid(column=0, row=2, pady=20)
-
-
-def lesson_show_response(item):
-    mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (
-        item))  # extracts correct response from database for selected itemid
-    correct_response = mycursor.fetchall()
-    correct_response = str(correct_response[0])  # sets correct_response variable as a string
-    disallowed_characters = "{}',()"
-    for character in disallowed_characters:  # removes all punctuation from correct response and user response to ensure correct response is not incorrect
-        correct_response = correct_response.replace(character, "")
-    correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 35))
-    correct_response_lbl.grid(column=0, row=2)
-    entry_confirm_btn = Button(gui, text="Hide Response", command=lambda: lesson_hide_response(item),
-                               font=("Corbel", 25), background="springgreen2", )
-    entry_confirm_btn.grid(column=0, row=2, pady=20)
-    clear_window()
-
-
-def lesson_hide_response(item):
-    response_entry_header = Label(gui, text="Enter the response below")
-    response_entry_header.grid(column=0, row=0)
 
 
 def reviews():  # function used when user begins reviews
     clear_window()
-    answer_status = False
-    for item in global_items_to_review:
-        while answer_status is False:
-            item = int(item)
-            mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (
-                item))  # sql statement to extract prompt from database for selected item id
-            prompt = mycursor.fetchall()
-            prompt_lbl_text = str(prompt[0])
-            prompt_lbl_text = remove_punc(prompt_lbl_text)
-            prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
-            prompt_lbl.grid(column=0, row=0, padx="270", pady="10")
-            user_entry = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter response to prompt
-            user_entry.grid(column=0, row=1)
-            entry_confirm_btn = Button(gui, text="Confirm Response",
-                                       command=lambda: review_confirm_response(item, user_entry),
-                                       font=("Corbel", 25), background="springgreen2", )
-            entry_confirm_btn.grid(column=0, row=2, pady=20)
-
-
-def review_confirm_response(item, user_entry):  # function to
-    user_input = user_entry.get()
-    mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (
-        item))  # extracts correct response from database for selected itemid
-    correct_response = mycursor.fetchall()
-    correct_response = str(correct_response[0])  # sets correct_response variable as a string
-    disallowed_characters = "{}',()"
-    for character in disallowed_characters:  # removes all punctuation from correct response and user response to ensure correct response is not incorrect
-        correct_response = correct_response.replace(character, "")
-        user_input = user_input.replace(character, "")
-    user_input.lower()  # ensures user response is all lower case to prevent correct reponse being flagged as incorrect
-    lowercase_correct_response = correct_response.lower()  # enures correct response is all lower case to prevent correct reponse being flagged as incorrect
-    if user_input == lowercase_correct_response:  # if user enters correct response:
-        answer_status = True
+    review_count = len(global_items_to_review)
+    i = 0
+    for i in range(review_count):
+        item = global_items_to_review[i]
         clear_window()
-        correct_lbl = Label(gui, text="Correct", font=("Corbel", 35))
-        correct_lbl.grid(column=0, row=0, padx=550, pady=1)
-        continue_btn = Button(gui, text="Next item...", command = next_item(item), font=("Corbel", 25))
-        continue_btn.grid(column=0, row=1, pady=20)
-        continue_btn.wait_variable()
-    else:  # if user enters incorrect response:
-        clear_window()
+        item = int(item)
+        mycursor.execute(
+            'SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))  # extracts the prompt for the current itemID
+        prompt = remove_punc(
+            str(mycursor.fetchall()))  # assigns output of sql statement with all unwanted punctuation removed, to prompt variable
+        print(prompt)
+        review_response_page(prompt, item)
 
 
-def next_item(item):
-    clear_window()
-    item = str(item)  # converts item from int back to string to allow it to be found and removed from review list
-    global_items_to_review.remove(item)
-    answer_status = False
-    reviews()
+def review_response_page(prompt, item):
+    review_header = Label(gui, text=prompt, font=("Corbel", 28))  # creates a header, the current item's prompt
+    review_header.grid(column=0, row=0, padx=450, pady=30)
+    review_instruction = Label(gui, text="Enter your response below:", font=("Corbel", 18))
+    review_instruction.grid(column=0, row=1)
+    review_entry = Entry(gui, width=27, font=("Corbel", 13))
+    review_entry.grid(column=0, row=2, pady=10)
+    review_confirm_btn = Button(gui, text="Confirm", command=lambda: verify_response(review_entry, item), width=17,
+                                background="springgreen2", font=("Corbel", 15), height=1)
+    review_confirm_btn.grid(column=0, row=3)
+    if review_confirm_btn is True:
+        print("correct")
+    else:
+        print("incorrect")
+
+
+def verify_response(review_entry, item):
+    user_response = str(review_entry.get())
+    mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID=(%s)' % (item))
+    correct_response = remove_punc(str(mycursor.fetchall()))
+        if user_response.lower() == correct_response.lower():
+            return(True)
+        else:
+            return(False)
+
+
+
 
 
 def set_management():  # menu to make changes to selected set
@@ -398,10 +353,7 @@ def create_new_item():  # function to insert new item and its prompt and respons
     new_prompt = new_prompt_entry.get()  # assigns the new prompt input by the user to a variable
     new_response = new_response_entry.get()  # assigns the new response input by the user to a variable
     max = max_item_id()  # call this function so the new item's itemid can be an increment of the previous max value
-    max = str(max)
-    disallowed_characters = "(),[]"
-    for character in disallowed_characters:  # removes all unwanted punctuation from chosen item id
-        max = max.replace(character, "")
+    max = remove_punc(str(max))
     max = int(max)  # converts max back to int datatype to allow it to be inserted to table
     max += 1  # increments the previous max itemid by 1 to allow for the variable's use as the new itemid
     now = datetime.now()
