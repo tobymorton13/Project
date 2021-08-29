@@ -40,12 +40,14 @@ def fetch_sets():  # set selection menu
                         height=1, width=15)
         button.grid(column=0, row=row_n, padx="520", pady="5")
         row_n += 1
-    new_set_btn = Button(gui, text="Create new set", command=new_set, font=("Corbel", 17), width=15, background="skyblue")
+    new_set_btn = Button(gui, text="Create new set", command=new_set, font=("Corbel", 17), width=15,
+                         background="skyblue")
     new_set_btn.grid(row=row_n, pady=5)
-    row_n+=1  #increment row n variable to ensure quit button is placed below new set button and not on it
+    row_n += 1  # increment row n variable to ensure quit button is placed below new set button and not on it
     quit_btn = Button(gui, text="Quit", command=gui.destroy, background="firebrick3", foreground="white",
                       font=("Corbel", 17), width=12)
     quit_btn.grid(row=row_n, pady=5)
+
 
 def new_set():  # function to create widgets for new set creation page
     clear_window()
@@ -53,11 +55,14 @@ def new_set():  # function to create widgets for new set creation page
     new_set_header.grid(column=0, row=0, pady=20, padx=400)
     new_set_entry = Entry(gui, width=15, font=("Corbel", 15))
     new_set_entry.grid(column=0, row=1, pady=5)
-    new_set_confirm = Button(gui, text="Confirm title", command=lambda: new_set_create(new_set_entry), width=15, background="springgreen2")
+    new_set_confirm = Button(gui, text="Confirm title", command=lambda: new_set_create(new_set_entry), width=15,
+                             background="springgreen2")
     new_set_confirm.grid(column=0, row=2, pady=5)
-    return_btn = Button(gui, text="Go back", command=lambda: fetch_sets(), height=1, width=15,  # creates a 'go back' button
+    return_btn = Button(gui, text="Go back", command=lambda: fetch_sets(), height=1, width=15,
+                        # creates a 'go back' button
                         background="gray3", foreground="white", font=("Corbel", 13))
     return_btn.grid(column=0, row=3, pady=5)
+
 
 def new_set_create(new_set_entry):
     set_title = new_set_entry.get()
@@ -66,8 +71,9 @@ def new_set_create(new_set_entry):
     max_setid = max(setid_list)  # calculates the highest setid currently in the database
     max_setid = str(max_setid)
     max_setid = int(remove_punc(max_setid))
-    max_setid+=1
-    mycursor.execute('INSERT INTO sets (SetID, SetName) values (%s, %s)', (max_setid, set_title))  # sql statement to create entry in the database of new set's name and setid
+    max_setid += 1
+    mycursor.execute('INSERT INTO sets (SetID, SetName) values (%s, %s)', (
+    max_setid, set_title))  # sql statement to create entry in the database of new set's name and setid
     mydb.commit()
     fetch_sets()
 
@@ -196,7 +202,6 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
 
 def lessons():  # function used when user begins lessons
     clear_window()
-    print(global_items_to_learn)
     for item in global_items_to_learn:
         clear_window()
         item = int(item)
@@ -207,8 +212,9 @@ def lessons():  # function used when user begins lessons
         prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
         prompt_lbl.grid(column=0, row=0, pady="10")
         global show_response_btn
-        show_response_btn = Button(gui, text="Show Response", command=lambda: lesson_show_response(item, prompt_lbl_text),
-                                  font=("Corbel", 25), background="springgreen2", )
+        show_response_btn = Button(gui, text="Show Response",
+                                   command=lambda: lesson_show_response(item, prompt_lbl_text),
+                                   font=("Corbel", 25), background="springgreen2", )
         show_response_btn.grid(column=0, row=2, pady=20, padx=500)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                             background="gray3", foreground="white", font=("Corbel", 13))
@@ -226,13 +232,13 @@ def lesson_show_response(item, prompt_lbl_text):
     correct_response = remove_punc(correct_response)  # removes unwanted punctuation from correct response string
     correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 35))
     correct_response_lbl.grid(column=0, row=2)
-    hide_response_btn = Button(gui, text="Hide Response", command=lambda: lesson_hide_response(item, correct_response, prompt_lbl_text),
+    hide_response_btn = Button(gui, text="Hide Response",
+                               command=lambda: lesson_hide_response(item, correct_response, prompt_lbl_text),
                                font=("Corbel", 25), background="black", foreground="white")
     hide_response_btn.grid(column=0, row=3, pady=20, padx=500)
     return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                         background="gray3", foreground="white", font=("Corbel", 13))
     return_btn.grid(column=0, row=4, pady="2")
-
 
 
 def lesson_hide_response(item, correct_response, prompt_lbl_text):
@@ -241,17 +247,20 @@ def lesson_hide_response(item, correct_response, prompt_lbl_text):
     prompt_header.grid(column=0, row=0)
     response_entry_instruct = Label(gui, text="Enter the response below:", font=("Corbel", 30))
     response_entry_instruct.grid(column=0, row=1)
-    lesson_user_entry = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter response to prompt
+    lesson_user_entry = Entry(gui, width=30,
+                              font=("Corbel", 15))  # creates entry box for user to enter response to prompt
     lesson_user_entry.grid(column=0, row=2)
     entry_confirm_btn = Button(gui, text="Confirm Response",
                                command=lambda: lesson_confirm_response(item, lesson_user_entry, correct_response),
                                font=("Corbel", 25), background="springgreen2", )
-    entry_confirm_btn.grid(column=0, row=3, pady=20, padx = 500)
+    entry_confirm_btn.grid(column=0, row=3, pady=20, padx=500)
     return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                         background="gray3", foreground="white", font=("Corbel", 13))
     return_btn.grid(column=0, row=4, pady="2")
 
-def lesson_confirm_response(item, lesson_user_entry, correct_response):  # function to verify whether the user's response matches the correct response stored in the database
+
+def lesson_confirm_response(item, lesson_user_entry,
+                            correct_response):  # function to verify whether the user's response matches the correct response stored in the database
     user_input = lesson_user_entry.get()  # assigns the user's inputted response to the user_input variable
     user_input = remove_punc(user_input)
     user_input.lower()  # ensures user response is all lower case to prevent correct response being flagged as incorrect
@@ -263,8 +272,9 @@ def lesson_confirm_response(item, lesson_user_entry, correct_response):  # funct
         mycursor.execute(srspos_update_statement, srspos_update_data)
         mydb.commit()
         now = str(datetime.now())
-        lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  #sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
-        lastreview_update_data = (now, item)  # stores the current datetime and the item id in a single object, to allow query to be executed with only 2 arguments
+        lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
+        lastreview_update_data = (now,
+                                  item)  # stores the current datetime and the item id in a single object, to allow query to be executed with only 2 arguments
         mycursor.execute(lastreview_update_statement, lastreview_update_data)
         mydb.commit()
         lesson_next_item(item)  # calls the next item function
@@ -274,19 +284,25 @@ def lesson_confirm_response(item, lesson_user_entry, correct_response):  # funct
         incorrect_lbl.grid(column=0, row=0, padx="270", pady="10")
         correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")
         correct_response_lbl.grid(column=0, row=1, pady="10")
-        user_entry_2 = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter correct response to prompt
+        user_entry_2 = Entry(gui, width=30,
+                             font=("Corbel", 15))  # creates entry box for user to enter correct response to prompt
         user_entry_2.grid(column=0, row=2)
-        entry_confirm_btn = Button(gui, text="Confirm Response", command=lambda: lesson_confirm_response(item, user_entry_2, correct_response),font=("Corbel", 25), background="springgreen2", )
+        entry_confirm_btn = Button(gui, text="Confirm Response",
+                                   command=lambda: lesson_confirm_response(item, user_entry_2, correct_response),
+                                   font=("Corbel", 25), background="springgreen2", )
         entry_confirm_btn.grid(column=0, row=3, pady=20)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                             background="gray3", foreground="white", font=("Corbel", 13))
         return_btn.grid(column=0, row=4, pady="2")
 
-def lesson_next_item(item):  #function to remove the completed item from the review list and call the function to progress onto the next item.
+
+def lesson_next_item(
+        item):  # function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
     item = str(item)  # converts item from int back to string to allow it to be found and removed from review list
     global_items_to_learn.remove(item)  # removes the completed item from
     lessons()
+
 
 def reviews():  # function used when user begins reviews
     clear_window()
@@ -300,7 +316,6 @@ def reviews():  # function used when user begins reviews
         item_srspos = str(mycursor.fetchall()[0])
         item_srspos = int(remove_punc(item_srspos))
         item_srspos += 1
-        print(prompt)
         prompt_lbl_text = str(prompt[0])
         prompt_lbl_text = remove_punc(prompt_lbl_text)
         prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
@@ -330,32 +345,38 @@ def review_confirm_response(item, user_entry, item_srspos):  # function to
     lowercase_correct_response = correct_response.lower()  # ensures correct response is all lower case to prevent correct response being flagged as incorrect
     if user_input == lowercase_correct_response:  # if user enters correct response:
         clear_window()
-        print(item)
         srspos_update_statement = 'UPDATE items SET SRSPos = (%s) WHERE ItemID = (%s)'  # sql statement to increase the item's srs pos if the correct response is entered by the user
         srspos_update_data = (item_srspos, item)
         mycursor.execute(srspos_update_statement, srspos_update_data)
         mydb.commit()
         now = str(datetime.now())
-        lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  #sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
-        lastreview_update_data = (now, item)   # stores the current datetime and the item id in a single object, to allow query to be executed with only 2 arguments
+        lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
+        lastreview_update_data = (now,
+                                  item)  # stores the current datetime and the item id in a single object, to allow query to be executed with only 2 arguments
         mycursor.execute(lastreview_update_statement, lastreview_update_data)
         mydb.commit()
         review_next_item(item)  # calls the next item function
     else:  # if user enters incorrect response:
         clear_window()
-        incorrect_lbl = Label(gui, text="Incorrect, the correct response was:", font=("Corbel", 35))  # creates label stating user's response was incorrect
+        incorrect_lbl = Label(gui, text="Incorrect, the correct response was:",
+                              font=("Corbel", 35))  # creates label stating user's response was incorrect
         incorrect_lbl.grid(column=0, row=0, padx="270", pady="10")
         correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")
         correct_response_lbl.grid(column=0, row=1, pady="10")
-        user_entry_2 = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter correct response to prompt
+        user_entry_2 = Entry(gui, width=30,
+                             font=("Corbel", 15))  # creates entry box for user to enter correct response to prompt
         user_entry_2.grid(column=0, row=2)
-        entry_confirm_btn = Button(gui, text="Confirm Response", command=lambda: review_confirm_response(item, user_entry_2, item_srspos),font=("Corbel", 25), background="springgreen2", )
+        entry_confirm_btn = Button(gui, text="Confirm Response",
+                                   command=lambda: review_confirm_response(item, user_entry_2, item_srspos),
+                                   font=("Corbel", 25), background="springgreen2", )
         entry_confirm_btn.grid(column=0, row=3, pady=20)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                             background="gray3", foreground="white", font=("Corbel", 13))
         return_btn.grid(column=0, row=4, pady="2")
 
-def review_next_item(item):  #function to remove the completed item from the review list and call the function to progress onto the next item.
+
+def review_next_item(
+        item):  # function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
     item = str(item)  # converts item from int back to string to allow it to be found and removed from review list
     global_items_to_review.remove(item)
