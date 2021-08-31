@@ -200,7 +200,7 @@ def delete_set():  # function used to delete chosen set, called by 'delete set' 
         mycursor.execute('DELETE FROM responses WHERE ItemID = (%s)' % (id))  # deletes all responses for selected itemid
         mycursor.execute(
             'DELETE FROM items WHERE ItemID = (%s)' % (id))  # deletes all in the items table for selected itemid
-    mycursor.execute('DELETE FROM sets WHERE SetID = (%s)' % (global_chosen_setid))
+    mycursor.execute('DELETE FROM sets WHERE SetID = (%s)' % (global_chosen_setid))   # deletes the set id and setname from the sets table
     mydb.commit()
     fetch_sets()
 
