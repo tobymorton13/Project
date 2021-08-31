@@ -265,6 +265,10 @@ def lesson_confirm_response(item, lesson_user_entry,
         mycursor.execute(lastreview_update_statement, lastreview_update_data)
         mydb.commit()
         lesson_next_item(item)  # calls the next item function
+        n_update_statement = 'UPDATE items SET repetitions = (%s) WHERE ItemID = (%s)'  # sql statement to reset item's repetitions to 1, following sm-2 algorithm's rules for when response grade is below 3
+        n_update_data = (1, item)
+        mycursor.execute(n_update_statement, n_update_data)
+        mydb.commit()
     else:  # if user enters incorrect response:
         clear_window()
         incorrect_lbl = Label(gui, text="Incorrect, the correct response was:", font=("Corbel", 35))  # label stating user's response was incorrect
@@ -286,10 +290,7 @@ def lesson_confirm_response(item, lesson_user_entry,
 def lesson_next_item(
         item):  # function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
-    n_update_statement = 'UPDATE items SET repetitions = (%s) WHERE ItemID = (%s)'  # sql statement to reset item's repetitions to 1, following sm-2 algorithm's rules for when response grade is below 3
-    n_update_data = (1, item)
-    mycursor.execute(n_update_statement, n_update_data)
-    mydb.commit()
+
     item = str(item)  # converts item from int back to string to allow it to be found and removed from review list
     global_items_to_learn.remove(item)  # removes the completed item from
     lessons()
@@ -331,6 +332,7 @@ def review_confirm_response(item, user_entry):  # function to
     user_input.lower()  # ensures user response is all lower case to prevent correct response being flagged as incorrect
     lowercase_correct_response = correct_response.lower()  # ensures correct response is all lower case to prevent correct response being flagged as incorrect
     if user_input == lowercase_correct_response:  # if user enters correct response:
+        print("correct")
         clear_window()
         now = str(datetime.now())
         lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
@@ -341,33 +343,33 @@ def review_confirm_response(item, user_entry):  # function to
         correct_lbl = Label(gui, text="Correct",
                             font=("Corbel", 35))  # creates label stating user's response was incorrect
         correct_lbl.grid(column=0, row=0, padx="270", pady="10")
-        rate_response_lbl = Label(gui, text="Rate your response:", font=("Corbel", 30))
+        rate_response_lbl = Label(gui, text="Grade your response:", font=("Corbel", 30))
         rate_response_lbl.grid(column=0, row=2, pady=5)
-        rate_3 = Button(gui, text="Very difficult to recall correct response", command=review_next_item(item, 3), font=("Corbel", 15),
-                        background="yellow")
-        rate_3.grid(column=0, row=3, pady=5)
-        rate_4 = Button(gui, text="Correct response after hesitation", command=review_next_item(item, 4),
+        rate_3 = Button(gui, text="C: Very difficult to recall correct response", command=lambda: review_next_item(item, 3), font=("Corbel", 15),
+                        background="green")
+        rate_3.grid(column=0, row=5, pady=5)
+        rate_4 = Button(gui, text=" B: Correct response after hesitation", command=lambda: review_next_item(item, 4),
                         font=("Corbel", 15), background="yellow")
         rate_4.grid(column=0, row=4, pady=5)
-        rate_5 = Button(gui, text="Correct response straight away",
-                        command=review_next_item(item, 5), font=("Corbel", 15),
-                        background="yellow")
-        rate_5.grid(column=0, row=5, pady=5)
+        rate_5 = Button(gui, text="A: Correct response straight away",
+                        command=lambda: review_next_item(item, 5), font=("Corbel", 15),
+                        background="red")
+        rate_5.grid(column=0, row=3, pady=5)
     else:  # if user enters incorrect response:
         clear_window()
+        print("incorrect")
         incorrect_lbl = Label(gui, text="Incorrect, the correct response was:",
                               font=("Corbel", 35))  # creates label stating user's response was incorrect
         incorrect_lbl.grid(column=0, row=0, padx="270", pady="10")
         correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")
         correct_response_lbl.grid(column=0, row=1, pady="10")
-        rate_response_lbl = Label(gui, text="Rate your response:", font=("Corbel", 30))
+        rate_response_lbl = Label(gui, text="How was your response?", font=("Corbel", 30))
         rate_response_lbl.grid(column=0, row=2, pady=5)
-        rate_0 = Button(gui, text="Complete blackout", command=review_next_item(item, 0), font=("Corbel", 15), background="yellow")
+        rate_0 = Button(gui, text="Complete blackout", command=lambda: review_next_item(item, 0), font=("Corbel", 15), width=15)
         rate_0.grid(column=0, row=3, pady=5)
-        rate_1 = Button(gui, text="Remembered correct response when shown", command=review_next_item(item, 1), font=("Corbel", 15), background="yellow")
+        rate_1 = Button(gui, text="Remembered correct response when shown", command=lambda: review_next_item(item, 1), font=("Corbel", 15),width=15)
         rate_1.grid(column=0, row=4, pady=5)
-        rate_2 = Button(gui, text="Correct response seemed easy to recall before answering", command=review_next_item(item, 2), font=("Corbel", 15),
-                        background="yellow")
+        rate_2 = Button(gui, text="Correct response seemed easy to recall before answering", command=lambda: review_next_item(item, 2), font=("Corbel", 15), width=15)
         rate_2.grid(column=0, row=5, pady=5)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                            background="gray3", foreground="white", font=("Corbel", 13))
@@ -377,6 +379,7 @@ def review_confirm_response(item, user_entry):  # function to
 def review_next_item(
         item, q):  # function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
+    print("q", q)
     mycursor.execute('SELECT repetitions FROM items WHERE ItemID = %s' % (item))  # sql statement to extract repetitions from items table
     n = mycursor.fetchall()  # assigns n to the output of the sql statement, n is the number of repetitions of the item
     mycursor.execute('SELECT efactor FROM items WHERE ItemID = %s' % (item))  # sql statement to extract repetitions from items table
@@ -393,7 +396,7 @@ def review_next_item(
         n_update_data = (1, item)
         mycursor.execute(n_update_statement, n_update_data)
         mydb.commit()
-    else:  # if user respond correctly, follow sm-2 procedure to calculate new efactor and update item's reps an
+    else:  # if user responds correctly, follow sm-2 procedure to calculate new efactor and update item's reps an
         ef = ef+(0.1-(5-q)*(0.08+(5-q)*0.02))  # calculate item's new efactor, following SM-2 procedure
         if ef<1.3:  # if calculated efactor is less than 1.3, assign it to 1.3, following SM-2 procedure
             ef=1.3
@@ -410,6 +413,8 @@ def review_next_item(
         n_update_data = (n, item)
         mycursor.execute(n_update_statement, n_update_data)
         mydb.commit()
+    item=str(item)
+    print(item)
     global_items_to_review.remove(item)
     print(global_items_to_review)
     reviews()
