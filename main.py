@@ -310,12 +310,12 @@ def reviews():  # function used when user begins reviews
         user_entry.grid(column=0, row=1)
         entry_confirm_btn = Button(gui, text="Confirm Response",
                                    command=lambda: review_confirm_response(item, user_entry),
-                                   font=("Corbel", 25), background="springgreen2", )
+                                   font=("Corbel", 25), background="springgreen2", )  # creates a button for the user to confirm their response
         entry_confirm_btn.grid(column=0, row=2, pady=20, padx=470)
-        return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
+        return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,  # creates a 'go back' button to return to the set options menu
                             background="gray3", foreground="white", font=("Corbel", 13))
         return_btn.grid(column=0, row=3, pady="2")
-    if not global_items_to_review:
+    if not global_items_to_review:  # if the items to review list is empty, return to the set options menu
         set_options(global_chosen_set)
 
 
@@ -327,7 +327,7 @@ def review_confirm_response(item, user_entry):  # function to
     correct_response = str(correct_response[0])  # sets correct_response variable as a string
     correct_response = remove_punc(correct_response)
     user_input = remove_punc(user_input)
-    user_input.lower()  # ensures user response is all lower case to prevent correct response being flagged as incorrect
+    user_input = user_input.lower()  # ensures user response is all lower case to prevent correct response being flagged as incorrect
     lowercase_correct_response = correct_response.lower()  # ensures correct response is all lower case to prevent correct response being flagged as incorrect
     if user_input == lowercase_correct_response:  # if user enters correct response:
         clear_window()
@@ -338,7 +338,7 @@ def review_confirm_response(item, user_entry):  # function to
         mycursor.execute(lastreview_update_statement, lastreview_update_data)
         mydb.commit()
         correct_lbl = Label(gui, text="Correct",
-                            font=("Corbel", 35), padx=250)  # creates label stating user's response was incorrect
+                            font=("Corbel", 40), padx=250, fg="green")  # creates label stating user's response was incorrect
         correct_lbl.grid(column=0, row=0, padx="270", pady="10")
         rate_response_lbl = Label(gui, text="Grade your response:", font=("Corbel", 30))
         rate_response_lbl.grid(column=0, row=2, pady=5)
@@ -391,7 +391,7 @@ def review_next_item(
         n_update_data = (1, item)
         mycursor.execute(n_update_statement, n_update_data)
         mydb.commit()
-    else:  # if user responds correctly, follow sm-2 procedure to calculate new efactor and update item's reps an
+    elif q>=3 and q<=5:  # if user responds correctly, follow sm-2 procedure to calculate new efactor and update item's reps an
         ef = ef+(0.1-(5-q)*(0.08+(5-q)*0.02))  # calculate item's new efactor, following SM-2 procedure
         if ef<1.3:  # if calculated efactor is less than 1.3, assign it to 1.3, following SM-2 procedure
             ef=1.3
@@ -408,8 +408,11 @@ def review_next_item(
         n_update_data = (n, item)
         mycursor.execute(n_update_statement, n_update_data)
         mydb.commit()
-    item=str(item)
-    global_items_to_review.remove(item)
+        item = str(item)
+        global_items_to_review.remove(item)
+    else:
+        reviews()
+    q=999  # reassign q to 999 to prevent the last known value being used if user closes the program before grading their response
     reviews()
 
 
