@@ -145,7 +145,7 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
         ef = remove_punc(str(ef[0]))
         ef = float(ef)
         interval = (((i_reps-1)*ef)*24*3600)-1  # uses sm-2 algorithm to calculate interval for item i in seconds- for n>2: I(n):=I(n-1)*EF
-        if i_reps == 0:  # if loop verifies whether an item is due for a review, calls review check taking item's last review and max duration, dependent on srs pos as arguments
+        if i_reps == 0:  # if loop that verifies whether an item is due for a review, calls review_check taking item's last review and calculated interval from sm-2 algorithm, as arguments
             items_to_learn.append(i)
         elif i_reps == 1:
             if review_check(i_lastreview, 86399):
@@ -162,8 +162,6 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     global_items_to_learn = items_to_learn
     global global_items_to_review
     global_items_to_review = items_to_review
-    print(global_items_to_review)
-    print(items_to_review)
     if available_lesson_count == "1":  # adjusts string based on whether plural for lesson is appropriate
         lessons_btn_text = ("You have " + available_lesson_count + " lesson available")
     else:
@@ -172,10 +170,10 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
         reviews_btn_text = ("You have " + available_review_count + " review available")
     else:
         reviews_btn_text = ("You have " + available_review_count + " reviews available")
-    lessons_btn = Button(gui, text=lessons_btn_text, command=lessons, font=("Corbel", 17), height=2, width=23,
+    lessons_btn = Button(gui, text=lessons_btn_text, command=lessons, font=("Corbel", 17), height=2, width=23,  # creates button displaying number of lessons available for the chosen set
                          background="yellow")
     lessons_btn.grid(column=0, row=1, pady="5")
-    reviews_btn = Button(gui, text=reviews_btn_text, command=reviews, font=("Corbel", 17), height=2, width=23,
+    reviews_btn = Button(gui, text=reviews_btn_text, command=reviews, font=("Corbel", 17), height=2, width=23,  # creates button displaying number of reviews available for the chosen set
                          background="yellow")
     reviews_btn.grid(column=0, row=2, pady="5")
     set_manage_button = Button(gui, text="Edit Set", command=set_management, background="gray3", foreground="white",
@@ -189,7 +187,7 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
 
 def lessons():  # function used when user begins lessons
     clear_window()
-    for item in global_items_to_learn:
+    for item in global_items_to_learn:  # iterates over the items to learn list, carries out the lesson loop for each item
         clear_window()
         item = int(item)
         mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (item))
@@ -307,13 +305,13 @@ def reviews():  # function used when user begins reviews
         prompt_lbl_text = str(prompt[0])
         prompt_lbl_text = remove_punc(prompt_lbl_text)
         prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
-        prompt_lbl.grid(column=0, row=0, padx="450", pady="10")
+        prompt_lbl.grid(column=0, row=0, pady="10")
         user_entry = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter response to prompt
         user_entry.grid(column=0, row=1)
         entry_confirm_btn = Button(gui, text="Confirm Response",
                                    command=lambda: review_confirm_response(item, user_entry),
                                    font=("Corbel", 25), background="springgreen2", )
-        entry_confirm_btn.grid(column=0, row=2, pady=20)
+        entry_confirm_btn.grid(column=0, row=2, pady=20, padx=470)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                             background="gray3", foreground="white", font=("Corbel", 13))
         return_btn.grid(column=0, row=3, pady="2")
@@ -332,7 +330,6 @@ def review_confirm_response(item, user_entry):  # function to
     user_input.lower()  # ensures user response is all lower case to prevent correct response being flagged as incorrect
     lowercase_correct_response = correct_response.lower()  # ensures correct response is all lower case to prevent correct response being flagged as incorrect
     if user_input == lowercase_correct_response:  # if user enters correct response:
-        print("correct")
         clear_window()
         now = str(datetime.now())
         lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
@@ -341,36 +338,35 @@ def review_confirm_response(item, user_entry):  # function to
         mycursor.execute(lastreview_update_statement, lastreview_update_data)
         mydb.commit()
         correct_lbl = Label(gui, text="Correct",
-                            font=("Corbel", 35))  # creates label stating user's response was incorrect
+                            font=("Corbel", 35), padx=250)  # creates label stating user's response was incorrect
         correct_lbl.grid(column=0, row=0, padx="270", pady="10")
         rate_response_lbl = Label(gui, text="Grade your response:", font=("Corbel", 30))
         rate_response_lbl.grid(column=0, row=2, pady=5)
         rate_3 = Button(gui, text="C: Very difficult to recall correct response", command=lambda: review_next_item(item, 3), font=("Corbel", 15),
-                        background="green")
+                        background="red", width=35)
         rate_3.grid(column=0, row=5, pady=5)
         rate_4 = Button(gui, text=" B: Correct response after hesitation", command=lambda: review_next_item(item, 4),
-                        font=("Corbel", 15), background="yellow")
+                        font=("Corbel", 15), background="yellow", width=35)
         rate_4.grid(column=0, row=4, pady=5)
         rate_5 = Button(gui, text="A: Correct response straight away",
                         command=lambda: review_next_item(item, 5), font=("Corbel", 15),
-                        background="red")
+                        background="springgreen2", width=35)
         rate_5.grid(column=0, row=3, pady=5)
     else:  # if user enters incorrect response:
         clear_window()
-        print("incorrect")
         incorrect_lbl = Label(gui, text="Incorrect, the correct response was:",
                               font=("Corbel", 35))  # creates label stating user's response was incorrect
         incorrect_lbl.grid(column=0, row=0, padx="270", pady="10")
         correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")
         correct_response_lbl.grid(column=0, row=1, pady="10")
-        rate_response_lbl = Label(gui, text="How was your response?", font=("Corbel", 30))
+        rate_response_lbl = Label(gui, text="Grade your response:", font=("Corbel", 25))
         rate_response_lbl.grid(column=0, row=2, pady=5)
-        rate_0 = Button(gui, text="Complete blackout", command=lambda: review_next_item(item, 0), font=("Corbel", 15), width=15)
-        rate_0.grid(column=0, row=3, pady=5)
-        rate_1 = Button(gui, text="Remembered correct response when shown", command=lambda: review_next_item(item, 1), font=("Corbel", 15),width=15)
+        rate_0 = Button(gui, text="C: Complete blackout", command=lambda: review_next_item(item, 0), font=("Corbel", 15), background="red", width=50)
+        rate_0.grid(column=0, row=5, pady=5)
+        rate_1 = Button(gui, text="B: Remembered correct response when shown", command=lambda: review_next_item(item, 1), font=("Corbel", 15), background="yellow", width=50)
         rate_1.grid(column=0, row=4, pady=5)
-        rate_2 = Button(gui, text="Correct response seemed easy to recall before answering", command=lambda: review_next_item(item, 2), font=("Corbel", 15), width=15)
-        rate_2.grid(column=0, row=5, pady=5)
+        rate_2 = Button(gui, text="A: Correct response seemed easy to recall before answering", command=lambda: review_next_item(item, 2), font=("Corbel", 15), background="springgreen2", width=50)
+        rate_2.grid(column=0, row=3, pady=5)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
                            background="gray3", foreground="white", font=("Corbel", 13))
         return_btn.grid(column=0, row=6, pady=2)
@@ -379,7 +375,6 @@ def review_confirm_response(item, user_entry):  # function to
 def review_next_item(
         item, q):  # function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
-    print("q", q)
     mycursor.execute('SELECT repetitions FROM items WHERE ItemID = %s' % (item))  # sql statement to extract repetitions from items table
     n = mycursor.fetchall()  # assigns n to the output of the sql statement, n is the number of repetitions of the item
     mycursor.execute('SELECT efactor FROM items WHERE ItemID = %s' % (item))  # sql statement to extract repetitions from items table
@@ -414,9 +409,7 @@ def review_next_item(
         mycursor.execute(n_update_statement, n_update_data)
         mydb.commit()
     item=str(item)
-    print(item)
     global_items_to_review.remove(item)
-    print(global_items_to_review)
     reviews()
 
 
