@@ -128,55 +128,42 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     itemid_list = mycursor.fetchall()
     items_to_learn = []  # creates empty list to store items due for lesson
     items_to_review = []  # creates empty list to store items due for review
-    learned_item_count = 0  # will be used to calculate set completion
-    total_item_count = 0  # ^^^
     for i in itemid_list:  # loop to verify which items are due for a lesson or review
-        i = str(i)  # convert each itemid from tuple to string
-        disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
-        for character in disallowed_characters:  # removes all unwanted puctuation from 'i' to allow it to be used it the sql select statement
-            i = i.replace(character, "")
-        mycursor.execute('SELECT SRSPos FROM items WHERE ItemID = (%s)' % (
+        i = remove_punc(str(i))  # convert each itemid from tuple to string and remove unwanted punctuation
+        mycursor.execute('SELECT repetitions FROM items WHERE ItemID = (%s)' % (
             i))  # sql statement to extract item i's position in the srs system
-        i_srspos = mycursor.fetchall()  # assigns the srs pos of item i to a variable
+        i_reps = mycursor.fetchall()  # assigns the number of repetitions of item i to a variable
+        i_reps = str(i_reps[0])
+        i_reps = remove_punc(i_reps)
+        i_reps = int(i_reps)
         mycursor.execute('SELECT LastReview FROM items WHERE ItemID = (%s)' % (
             i))  # sql statement to extract datetime of item i's last review
         i_lastreview = mycursor.fetchall()  # assigns the datetime of item i's last review to a variable
-        i_srspos = str(i_srspos)
-        if i_srspos == "[(0,)]":  # if loop verifies whether an item is due for a review, calls review check taking item's last review and max duration, dependent on srs pos as arguments
+        mycursor.execute('SELECT efactor FROM items WHERE ItemID = (%s)' % (
+            i))  # sql statement to extract efactor of item i
+        ef = mycursor.fetchall()
+        ef = remove_punc(str(ef[0]))
+        ef = float(ef)
+        interval = (((i_reps-1)*ef)*24*3600)-1  # uses sm-2 algorithm to calculate interval for item i in seconds- for n>2: I(n):=I(n-1)*EF
+        if i_reps == 0:  # if loop verifies whether an item is due for a review, calls review check taking item's last review and max duration, dependent on srs pos as arguments
             items_to_learn.append(i)
-        elif i_srspos == "[(1,)]":
-            if review_check(i_lastreview, 14399):
-                items_to_review.append(i)
-        elif i_srspos == "[(2,)]":
-            if review_check(i_lastreview, 28799):
-                items_to_review.append(i)
-        elif i_srspos == "[(3,)]":
+        elif i_reps == 1:
             if review_check(i_lastreview, 86399):
                 items_to_review.append(i)
-        elif i_srspos == "[(4,)]":
-            if review_check(i_lastreview, 172799):
-                items_to_review.append(i)
-        elif i_srspos == "[(5,)]":
-            if review_check(i_lastreview, 647999):
-                items_to_review.append(i)
-        elif i_srspos == "[(6,)]":
-            if review_check(i_lastreview, 1295999):
-                items_to_review.append(i)
-        elif i_srspos == "[(7,)]":
-            if review_check(i_lastreview, 2591999):
-                items_to_review.append(i)
-        elif i_srspos == "[(8,)]":
-            if review_check(i_lastreview, 10367999):
+        elif i_reps == 2:
+            if review_check(i_lastreview, 518400):
                 items_to_review.append(i)
         else:
-            learned_item_count += 1
-        total_item_count += 1
+            if review_check(i_lastreview, interval):
+                items_to_review.append(i)
     available_lesson_count = str(len(items_to_learn))
     available_review_count = str(len(items_to_review))
     global global_items_to_learn  # adds global versions of lesson/review lists to allow them to be used in other functions
     global_items_to_learn = items_to_learn
     global global_items_to_review
     global_items_to_review = items_to_review
+    print(global_items_to_review)
+    print(items_to_review)
     if available_lesson_count == "1":  # adjusts string based on whether plural for lesson is appropriate
         lessons_btn_text = ("You have " + available_lesson_count + " lesson available")
     else:
@@ -267,9 +254,9 @@ def lesson_confirm_response(item, lesson_user_entry,
     lowercase_correct_response = correct_response.lower()  # ensures correct response is all lower case to prevent correct response being flagged as incorrect
     if user_input == lowercase_correct_response:  # if user enters correct response:
         clear_window()
-        srspos_update_statement = 'UPDATE items SET SRSPos = (%s) WHERE ItemID = (%s)'  # sql statement to increase the item's srs pos if the correct response is entered by the user
-        srspos_update_data = (1, item)
-        mycursor.execute(srspos_update_statement, srspos_update_data)
+        reps_update_statement = 'UPDATE items SET repetitions = (%s) WHERE ItemID = (%s)'  # sql statement to increase the item's repetitions by 1 if the correct response is entered by the user
+        reps_update_data = (1, item)
+        mycursor.execute(reps_update_statement, reps_update_data)
         mydb.commit()
         now = str(datetime.now())
         lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
@@ -280,9 +267,9 @@ def lesson_confirm_response(item, lesson_user_entry,
         lesson_next_item(item)  # calls the next item function
     else:  # if user enters incorrect response:
         clear_window()
-        incorrect_lbl = Label(gui, text="Incorrect, the correct response was:", font=("Corbel", 35))
+        incorrect_lbl = Label(gui, text="Incorrect, the correct response was:", font=("Corbel", 35))  # label stating user's response was incorrect
         incorrect_lbl.grid(column=0, row=0, padx="270", pady="10")
-        correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")
+        correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")  # label showing correct response
         correct_response_lbl.grid(column=0, row=1, pady="10")
         user_entry_2 = Entry(gui, width=30,
                              font=("Corbel", 15))  # creates entry box for user to enter correct response to prompt
@@ -299,6 +286,10 @@ def lesson_confirm_response(item, lesson_user_entry,
 def lesson_next_item(
         item):  # function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
+    n_update_statement = 'UPDATE items SET repetitions = (%s) WHERE ItemID = (%s)'  # sql statement to reset item's repetitions to 1, following sm-2 algorithm's rules for when response grade is below 3
+    n_update_data = (1, item)
+    mycursor.execute(n_update_statement, n_update_data)
+    mydb.commit()
     item = str(item)  # converts item from int back to string to allow it to be found and removed from review list
     global_items_to_learn.remove(item)  # removes the completed item from
     lessons()
@@ -312,10 +303,6 @@ def reviews():  # function used when user begins reviews
         mycursor.execute('SELECT PromptOut FROM prompts WHERE ItemID = (%s)' % (
             item))  # sql statement to extract prompt from database for selected item id
         prompt = mycursor.fetchall()
-        mycursor.execute('SELECT SRSPos FROM items WHERE ItemID = (%s)' % (item))
-        item_srspos = str(mycursor.fetchall()[0])
-        item_srspos = int(remove_punc(item_srspos))
-        item_srspos += 1
         prompt_lbl_text = str(prompt[0])
         prompt_lbl_text = remove_punc(prompt_lbl_text)
         prompt_lbl = Label(gui, text=prompt_lbl_text, font=("Corbel", 40))
@@ -323,7 +310,7 @@ def reviews():  # function used when user begins reviews
         user_entry = Entry(gui, width=30, font=("Corbel", 15))  # creates entry box for user to enter response to prompt
         user_entry.grid(column=0, row=1)
         entry_confirm_btn = Button(gui, text="Confirm Response",
-                                   command=lambda: review_confirm_response(item, user_entry, item_srspos),
+                                   command=lambda: review_confirm_response(item, user_entry),
                                    font=("Corbel", 25), background="springgreen2", )
         entry_confirm_btn.grid(column=0, row=2, pady=20)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
@@ -333,7 +320,7 @@ def reviews():  # function used when user begins reviews
         set_options(global_chosen_set)
 
 
-def review_confirm_response(item, user_entry, item_srspos):  # function to
+def review_confirm_response(item, user_entry):  # function to
     user_input = user_entry.get()
     mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (
         item))  # extracts correct response from database for selected itemid
@@ -345,17 +332,27 @@ def review_confirm_response(item, user_entry, item_srspos):  # function to
     lowercase_correct_response = correct_response.lower()  # ensures correct response is all lower case to prevent correct response being flagged as incorrect
     if user_input == lowercase_correct_response:  # if user enters correct response:
         clear_window()
-        srspos_update_statement = 'UPDATE items SET SRSPos = (%s) WHERE ItemID = (%s)'  # sql statement to increase the item's srs pos if the correct response is entered by the user
-        srspos_update_data = (item_srspos, item)
-        mycursor.execute(srspos_update_statement, srspos_update_data)
-        mydb.commit()
         now = str(datetime.now())
         lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
         lastreview_update_data = (now,
                                   item)  # stores the current datetime and the item id in a single object, to allow query to be executed with only 2 arguments
         mycursor.execute(lastreview_update_statement, lastreview_update_data)
         mydb.commit()
-        review_next_item(item)  # calls the next item function
+        correct_lbl = Label(gui, text="Correct",
+                            font=("Corbel", 35))  # creates label stating user's response was incorrect
+        correct_lbl.grid(column=0, row=0, padx="270", pady="10")
+        rate_response_lbl = Label(gui, text="Rate your response:", font=("Corbel", 30))
+        rate_response_lbl.grid(column=0, row=2, pady=5)
+        rate_3 = Button(gui, text="Very difficult to recall correct response", command=review_next_item(item, 3), font=("Corbel", 15),
+                        background="yellow")
+        rate_3.grid(column=0, row=3, pady=5)
+        rate_4 = Button(gui, text="Correct response after hesitation", command=review_next_item(item, 4),
+                        font=("Corbel", 15), background="yellow")
+        rate_4.grid(column=0, row=4, pady=5)
+        rate_5 = Button(gui, text="Correct response straight away",
+                        command=review_next_item(item, 5), font=("Corbel", 15),
+                        background="yellow")
+        rate_5.grid(column=0, row=5, pady=5)
     else:  # if user enters incorrect response:
         clear_window()
         incorrect_lbl = Label(gui, text="Incorrect, the correct response was:",
@@ -363,23 +360,58 @@ def review_confirm_response(item, user_entry, item_srspos):  # function to
         incorrect_lbl.grid(column=0, row=0, padx="270", pady="10")
         correct_response_lbl = Label(gui, text=correct_response, font=("Corbel", 30), foreground="grey")
         correct_response_lbl.grid(column=0, row=1, pady="10")
-        user_entry_2 = Entry(gui, width=30,
-                             font=("Corbel", 15))  # creates entry box for user to enter correct response to prompt
-        user_entry_2.grid(column=0, row=2)
-        entry_confirm_btn = Button(gui, text="Confirm Response",
-                                   command=lambda: review_confirm_response(item, user_entry_2, item_srspos),
-                                   font=("Corbel", 25), background="springgreen2", )
-        entry_confirm_btn.grid(column=0, row=3, pady=20)
+        rate_response_lbl = Label(gui, text="Rate your response:", font=("Corbel", 30))
+        rate_response_lbl.grid(column=0, row=2, pady=5)
+        rate_0 = Button(gui, text="Complete blackout", command=review_next_item(item, 0), font=("Corbel", 15), background="yellow")
+        rate_0.grid(column=0, row=3, pady=5)
+        rate_1 = Button(gui, text="Remembered correct response when shown", command=review_next_item(item, 1), font=("Corbel", 15), background="yellow")
+        rate_1.grid(column=0, row=4, pady=5)
+        rate_2 = Button(gui, text="Correct response seemed easy to recall before answering", command=review_next_item(item, 2), font=("Corbel", 15),
+                        background="yellow")
+        rate_2.grid(column=0, row=5, pady=5)
         return_btn = Button(gui, text="Go back", command=lambda: set_options(global_chosen_set), height=1, width=15,
-                            background="gray3", foreground="white", font=("Corbel", 13))
-        return_btn.grid(column=0, row=4, pady="2")
+                           background="gray3", foreground="white", font=("Corbel", 13))
+        return_btn.grid(column=0, row=6, pady=2)
 
 
 def review_next_item(
-        item):  # function to remove the completed item from the review list and call the function to progress onto the next item.
+        item, q):  # function to remove the completed item from the review list and call the function to progress onto the next item.
     clear_window()
-    item = str(item)  # converts item from int back to string to allow it to be found and removed from review list
+    mycursor.execute('SELECT repetitions FROM items WHERE ItemID = %s' % (item))  # sql statement to extract repetitions from items table
+    n = mycursor.fetchall()  # assigns n to the output of the sql statement, n is the number of repetitions of the item
+    mycursor.execute('SELECT efactor FROM items WHERE ItemID = %s' % (item))  # sql statement to extract repetitions from items table
+    ef = mycursor.fetchall()  # assigns ef to the output of the sql statement, ef is the efactor of an item- its estimated difficulty.
+    ef = remove_punc(str(ef))
+    ef=float(ef)
+    if q<3:  # if user answers incorrectly, causing response rating to be less than 3, the item is reset to the beginning of the SR system, following sm-2 algorithm's rules.
+        ef=2.5
+        ef_update_statement = 'UPDATE items SET efactor = (%s) WHERE ItemID = (%s)'  # sql statement to reset item's efactor to 2.5, following sm-2 algorithm's rules for when response grade is below 3
+        ef_update_data = (ef, item)
+        mycursor.execute(ef_update_statement, ef_update_data)
+        mydb.commit()
+        n_update_statement = 'UPDATE items SET repetitions = (%s) WHERE ItemID = (%s)'  # sql statement to reset item's repetitions to 1, following sm-2 algorithm's rules for when response grade is below 3
+        n_update_data = (1, item)
+        mycursor.execute(n_update_statement, n_update_data)
+        mydb.commit()
+    else:  # if user respond correctly, follow sm-2 procedure to calculate new efactor and update item's reps an
+        ef = ef+(0.1-(5-q)*(0.08+(5-q)*0.02))  # calculate item's new efactor, following SM-2 procedure
+        if ef<1.3:  # if calculated efactor is less than 1.3, assign it to 1.3, following SM-2 procedure
+            ef=1.3
+        else:
+            ef=ef
+        ef_update_statement = 'UPDATE items SET efactor = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
+        ef_update_data = (ef, item)  # stores the current datetime and the item id in a single object, to allow query to be executed with only 2 arguments
+        mycursor.execute(ef_update_statement, ef_update_data)  # sql statement to update item's efactor to new calculated value
+        mydb.commit()
+        n = remove_punc(str(n[0]))
+        n=int(n)
+        n+=1
+        n_update_statement = 'UPDATE items SET repetitions = (%s) WHERE ItemID = (%s)'  # sql statement to update item's repetitions count
+        n_update_data = (n, item)
+        mycursor.execute(n_update_statement, n_update_data)
+        mydb.commit()
     global_items_to_review.remove(item)
+    print(global_items_to_review)
     reviews()
 
 
@@ -461,12 +493,8 @@ def item_manage(val):  # function for management of a specific item
     mycursor.execute('SELECT ItemID FROM prompts WHERE PromptOut = (%s)' % (prompt_out))  # selects chosen item's itemid
     global chosen_itemid
     chosen_itemid = mycursor.fetchall()
-    chosen_itemid = str(chosen_itemid)
-    disallowed_characters = "(),[]"
-    for character in disallowed_characters:  # removes all unwanted punctuation from chosen item id
-        chosen_itemid = chosen_itemid.replace(character, "")
+    chosen_itemid = remove_punc(str(chosen_itemid))
     chosen_itemid = int(chosen_itemid)
-
     global prompt_entry
     prompt_entry = Entry(gui)  # creates a text entry box
     prompt_entry.grid(column=0, row=2, pady=10)
