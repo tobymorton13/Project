@@ -88,9 +88,7 @@ def remove_punc(string):  # function to remove all unwanted punctuation from a s
 def review_check(last_rev, max_dur):  # function to verify whether an item is due for a review
     now = datetime.now()
     last_rev = str(last_rev)
-    disallowed_characters = "(),[]'"  # creation of a set of unwanted punctuation
-    for character in disallowed_characters:  # removes all unwanted punctuation from 'i' to allow it to be used it the sql select statement
-        last_rev = last_rev.replace(character, "")
+    last_rev = remove_punc(last_rev)
     x = last_rev
     if (x[5] == "0") and (x[8] == "0"):
         last_rev_datetime = datetime(int(x[0:4]), int(x[6]), int(x[9]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
