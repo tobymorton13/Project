@@ -38,6 +38,7 @@ def fetch_sets():  # set selection menu
         item.replace(" ", "")
         button = Button(gui, text=item, command=lambda chosen_set=item: set_options(chosen_set), font=("Corbel", 17),
                         height=1, width=15)
+        # creates a button displaying the set's name, linking to the set_options function with the chosen set as the function's argument
         button.grid(column=0, row=row_n, padx="520", pady="5")
         row_n += 1
     new_set_btn = Button(gui, text="Create new set", command=new_set, font=("Corbel", 17), width=15,
@@ -112,7 +113,7 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     global_chosen_set = chosen_set
     set_options_header = Label(gui, text=chosen_set,
                                font=("Corbel", 30))  # creates a header label, the title of the chosen set
-    set_options_header.grid(column=0, row=0, padx="475")  # places the header label on the canvas
+    set_options_header.grid(column=0, row=0, padx="500")  # places the header label on the canvas
     mycursor.execute('SELECT SetID, SetName FROM sets')  # sql statement to select all setid's and setnames
     set_list = mycursor.fetchall()  # assign output of sql statement to set_list variable
     tuple_in_list = [set_list for set_list in set_list if
