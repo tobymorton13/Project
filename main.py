@@ -442,15 +442,15 @@ def review_next_item(
         mycursor.execute(ef_update_statement,
                          ef_update_data)  # sql statement to update item's efactor to new calculated value
         mydb.commit()
-        n = remove_punc(str(n[0]))
-        n = int(n)
-        n += 1
+        n = remove_punc(str(n[0]))  # removes all punctuation from n so it can be converted to an integer
+        n = int(n)  # convert n to an integer to allow it to be inserted into items table
+        n += 1  # increment n by 1 to reflect that the user has completed a review
         n_update_statement = 'UPDATE items SET repetitions = (%s) WHERE ItemID = (%s)'  # sql statement to update item's repetitions count
         n_update_data = (n, item)
-        mycursor.execute(n_update_statement, n_update_data)
+        mycursor.execute(n_update_statement, n_update_data)  # executes sql statement taking 'n' repetitions and item as the data for the query
         mydb.commit()
         item = str(item)
-        global_items_to_review.remove(item)
+        global_items_to_review.pop()  # since the user answered correctly, pop the item from the review stack
     else:
         reviews()
     q = 0  # reassign q to 0 to prevent the last known value being used if user closes the program before grading their response
