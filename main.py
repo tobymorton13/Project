@@ -648,7 +648,7 @@ def prompt_confirm():  # function to update the prompts table with the new updat
 
 
 def response_confirm():  # function to update the response table with the new updates entered by the user
-    new_response = new_response_entry.get()  # assigns the new response input by the user to a variable
+    new_response = response_entry.get()  # assigns the new response input by the user to a variable
     if len(new_response) > 60:
         set_options(global_chosen_set)
     response_statement = 'UPDATE responses SET ResponseOut = (%s) WHERE ItemID = (%s)'
