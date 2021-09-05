@@ -67,6 +67,11 @@ def new_set():  # function to create widgets for new set creation page
 
 def new_set_create(new_set_entry):
     set_title = new_set_entry.get()
+    if len(set_title) > 25:
+        new_set()
+        print("invalid set title")
+    else:
+        set_title=set_title
     mycursor.execute('SELECT SetID FROM sets')  # sql statement to extract all setid's
     setid_list = mycursor.fetchall()  # stores output of statement in a list
     max_setid = max(setid_list)  # calculates the highest setid currently in the database
@@ -422,7 +427,16 @@ def review_next_item(
     ef = remove_punc(str(ef))
     ef = float(ef)
     if q < 3:  # if user answers incorrectly, causing response rating to be less than 3, the item is reset to the beginning of the SR system, following sm-2 algorithm's rules.
-        ef = 2.5
+        ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))  # calculate item's new efactor, following SM-2 procedure
+        if ef < 1.3:  # if calculated efactor is less than 1.3, assign it to 1.3, following SM-2 procedure
+            ef = 1.3
+        else:
+            ef = ef
+        now = str(datetime.now())
+        lastreview_update_statement = 'UPDATE items SET LastReview = (%s) WHERE ItemID = (%s)'  # sql statement to update the lastreview datetime of the item to the current datetime if the correct response is entered by the user.
+        lastreview_update_data = (now, item)  # stores the current datetime and the item id in a single object, to allow query to be executed with only 2 arguments
+        mycursor.execute(lastreview_update_statement, lastreview_update_data)
+        mydb.commit()
         ef_update_statement = 'UPDATE items SET efactor = (%s) WHERE ItemID = (%s)'  # sql statement to reset item's efactor to 2.5, following sm-2 algorithm's rules for when response grade is below 3
         ef_update_data = (ef, item)
         mycursor.execute(ef_update_statement, ef_update_data)
@@ -431,6 +445,7 @@ def review_next_item(
         n_update_data = (1, item)
         mycursor.execute(n_update_statement, n_update_data)
         mydb.commit()
+        global_items_to_review.pop()
     elif q >= 3 and q <= 5:  # if user responds correctly, follow sm-2 procedure to calculate new efactor and update item's reps an
         ef = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))  # calculate item's new efactor, following SM-2 procedure
         if ef < 1.3:  # if calculated efactor is less than 1.3, assign it to 1.3, following SM-2 procedure
@@ -589,7 +604,11 @@ def new_item():  # function for page allowing creation of a new item
 
 def create_new_item():  # function to insert new item and its prompt and response to database
     new_prompt = new_prompt_entry.get()  # assigns the new prompt input by the user to a variable
+    if len(new_prompt) > 60:
+        set_options(global_chosen_set)
     new_response = new_response_entry.get()  # assigns the new response input by the user to a variable
+    if len(new_response) > 60:
+        set_options(global_chosen_set)
     max = max_item_id()  # call this function so the new item's itemid can be an increment of the previous max value
     max = str(max)
     disallowed_characters = "(),[]"
