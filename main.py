@@ -1,15 +1,26 @@
 from tkinter import *
 import mysql.connector
-from datetime import datetime, timedelta
+from datetime import datetime
+from mysql.connector import errorcode
+from tkinter import messagebox
 
 now = datetime.now()  # variable containing current date and time
 
-mydb = mysql.connector.connect(  # configure connection to mysql database
-    host='localhost',
-    user='root',
-    password='password',
-    port='3306',
-    database='simplesrs')
+try:  # try statement to provide user-friendly error messages if any database-related errors are raised
+    mydb = mysql.connector.connect(  # configure connection to mysql database
+        host='localhost',
+        user='root',
+        password='password',
+        port='3306',
+        database='simplesrs')
+except mysql.connector.Error as err:
+  if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+    print("Unable to authorise access to database")
+  elif err.errno == errorcode.ER_BAD_DB_ERROR:
+    print("Database does not exist")
+  else:
+    print(err)
+
 
 mycursor = mydb.cursor()
 
@@ -26,7 +37,9 @@ def clear_window():  # function used whenever a new page is loaded and all widge
     for widgets in all_widgets:  # clears gui window
         widgets.destroy()
 
-def validate_input(input_str, length):  # subroutine used to verify that user input is of a reasonable length to improve security
+
+def validate_input(input_str,
+                   length):  # subroutine used to verify that user input is of a reasonable length to improve security
     if len(str(input_str)) > length:
         return False
     else:
@@ -121,7 +134,7 @@ def set_options(chosen_set):  # chosen set option menu, from here, lessons, revi
     clear_window()
     global g_chosen_set  # creation of a global chosen_set variable to allow it
     # to be used in the set management screen and the function to be called at various other points within the program
-    gl_chosen_set = chosen_set
+    g_chosen_set = chosen_set
     set_options_header = Label(gui, text=chosen_set,
                                font=("Corbel", 30))  # creates a header label, the title of the chosen set
     set_options_header.grid(column=0, row=0, padx="500")  # places the header label on the canvas
@@ -687,6 +700,11 @@ def item_delete_func():  # function used to delete an item when the delete butto
     mydb.commit()
     set_management()
 
+def on_closing():  # subroutine to provide a confirmation button when the user trys to close the window
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        gui.destroy()
+
+gui.protocol("WM_DELETE_WINDOW", on_closing)
 
 # OPENING MENU:
 logo = PhotoImage(file="logo.png")  # logo
