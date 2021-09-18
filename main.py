@@ -14,13 +14,12 @@ try:  # try statement to provide user-friendly error messages if any database-re
         port='3306',
         database='simplesrs')
 except mysql.connector.Error as err:
-  if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-    print("Unable to authorise access to database")
-  elif err.errno == errorcode.ER_BAD_DB_ERROR:
-    print("Database does not exist")
-  else:
-    print(err)
-
+    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        print("Unable to authorise access to database")
+    elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        print("Database does not exist")
+    else:
+        print(err)
 
 mycursor = mydb.cursor()
 
@@ -700,9 +699,11 @@ def item_delete_func():  # function used to delete an item when the delete butto
     mydb.commit()
     set_management()
 
+
 def on_closing():  # subroutine to provide a confirmation button when the user trys to close the window
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         gui.destroy()
+
 
 gui.protocol("WM_DELETE_WINDOW", on_closing)
 
