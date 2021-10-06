@@ -37,6 +37,14 @@ def clear_window():  # function used whenever a new page is loaded and all widge
         widgets.destroy()
 
 
+def validate_input(input_str,
+                   length):  # subroutine used to verify that user input is of a reasonable length to improve security
+    if len(str(input_str)) > length:
+        return False
+    else:
+        return True
+
+
 def fetch_sets():  # set selection menu
     clear_window()  # remove opening menu labels/buttons:
     mydb.commit()
@@ -77,11 +85,10 @@ def new_set():  # function to create widgets for new set creation page
 
 def new_set_create(new_set_entry):
     set_title = new_set_entry.get()
-    if len(set_title) > 25:
-        new_set()
-        print("invalid set title")
-    else:
+    if validate_input(set_title, 25):
         set_title = set_title
+    else:
+        fetch_sets()
     mycursor.execute('SELECT SetID FROM sets')  # sql statement to extract all setid's
     setid_list = mycursor.fetchall()  # stores output of statement in a list
     max_setid = max(setid_list)  # calculates the highest setid currently in the database
@@ -288,6 +295,10 @@ def lesson_confirm_response(item, lesson_user_entry,
                             correct_response):  # function to verify whether the user's response matches the correct response stored in the database
     user_input = lesson_user_entry.get()  # assigns the user's inputted response to the user_input variable
     user_input = remove_punc(user_input)
+    if validate_input(user_input, 20):
+        user_input = user_input
+    else:
+        fetch_sets()
     user_input.lower()  # ensures user response is all lower case to prevent correct response being flagged as incorrect
     lowercase_correct_response = correct_response.lower()  # ensures correct response is all lower case to prevent correct response being flagged as incorrect
     if user_input == lowercase_correct_response:  # if user enters correct response:
@@ -365,6 +376,10 @@ def reviews():  # function used when user begins reviews
 
 def review_confirm_response(item, user_entry):  # function to
     user_input = user_entry.get()
+    if validate_input(user_input, 20):
+        user_input = user_input
+    else:
+        fetch_sets()
     mycursor.execute('SELECT ResponseOut FROM responses WHERE ItemID = (%s)' % (
         item))  # extracts correct response from database for selected itemid
     correct_response = mycursor.fetchall()
@@ -525,10 +540,8 @@ def set_management():  # menu to make changes to selected set
 
     n = 0  # variable to determine position within listbox to insert prompt to, increments with each iteration
     for item in items_list:
-        disallowed_characters = "{}[]"
         item = str(item)
-        for character in disallowed_characters:  # removes all unwanted punctuation from prompt string
-            item = item.replace(character, "")
+        item = remove_punc(item)
         items_lb.insert(n, item)  # inserts item to the listbox widget
         n += 1
 
@@ -618,10 +631,14 @@ def new_item():  # function for page allowing creation of a new item
 
 def create_new_item():  # function to insert new item and its prompt and response to database
     new_prompt = new_prompt_entry.get()  # assigns the new prompt input by the user to a variable
-    if len(new_prompt) > 60:
+    if validate_input(new_prompt, 60):
+        new_prompt = new_prompt
+    else:
         set_options(g_chosen_set)
     new_response = new_response_entry.get()  # assigns the new response input by the user to a variable
-    if len(new_response) > 60:
+    if validate_input(new_response, 60):
+        new_response = new_response
+    else:
         set_options(g_chosen_set)
     max = max_item_id()  # call this function so the new item's itemid can be an increment of the previous max value
     max = str(max)
@@ -663,7 +680,9 @@ def prompt_confirm():  # function to update the prompts table with the new updat
 
 def response_confirm():  # function to update the response table with the new updates entered by the user
     new_response = response_entry.get()  # assigns the new response input by the user to a variable
-    if len(new_response) > 60:
+    if validate_input(new_response, 60):
+        new_response = new_response
+    else:
         set_options(g_chosen_set)
     response_statement = 'UPDATE responses SET ResponseOut = (%s) WHERE ItemID = (%s)'
     data = (new_response, chosen_itemid)
