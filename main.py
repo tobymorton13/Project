@@ -540,6 +540,7 @@ def set_management():  # menu to make changes to selected set
 
     n = 0  # variable to determine position within listbox to insert prompt to, increments with each iteration
     for item in items_list:
+        item = str(item)
         item = remove_punc(item)
         items_lb.insert(n, item)  # inserts item to the listbox widget
         n += 1
